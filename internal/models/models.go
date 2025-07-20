@@ -2,11 +2,22 @@ package models
 
 import "time"
 
-type User struct {
-	ID       int    `json:"id"`
+type UserRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"Password"`
+}
+
+type Profile struct {
+	ID        int       `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created-at"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type Room struct {

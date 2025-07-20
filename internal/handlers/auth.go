@@ -13,7 +13,7 @@ import (
 
 func RegisterHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var user models.User
+		var user models.UserRequest
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			http.Error(w, "Ошибка распознавания json", http.StatusBadRequest)
 			return
@@ -29,51 +29,41 @@ func RegisterHandler(db *sql.DB) http.HandlerFunc {
 		}
 		user.Password = string(hashedPass)
 		rep := storage.NewUserRepository(db)
-		if err = rep.CreateUser(user); err != nil {
+		profile, err := rep.CreateUser(user)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		user.Password = ""
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(profile)
 	}
 }
 
 func LoginHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var input struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}
+		var input models.LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			http.Error(w, "Ошибка распознавания json", http.StatusBadRequest)
 			return
 		}
 		query := "SELECT id, password_hash FROM users WHERE email = $1"
-		var user models.User
-		if err := db.QueryRow(query, input.Email).Scan(&user.ID, &user.Password); err != nil {
+		var id int
+		var password string
+		if err := db.QueryRow(query, input.Email).Scan(&id, &password); err != nil {
 			http.Error(w, "Пользователь не найден", http.StatusUnauthorized)
 			return
 		}
-		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(input.Password)); err != nil {
 			http.Error(w, "Неверный пароль", http.StatusUnauthorized)
 			return
 		}
-		token, err := utils.GenJWT(user.ID)
+		token, err := utils.GenJWT(id)
 		if err != nil {
 			http.Error(w, "Ошибка создания токена", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"token": token})
-	}
-}
-
-func ProfileHandler(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		userID := r.Context().Value("userID").(int)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(userID)
 	}
 }

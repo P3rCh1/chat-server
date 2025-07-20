@@ -50,6 +50,7 @@ func ApplyMigrations(db *sql.DB) error {
 	    	id SERIAL PRIMARY KEY,
     		username VARCHAR(50) UNIQUE NOT NULL,
     		email VARCHAR(100) UNIQUE NOT NULL,
+			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	    	password_hash VARCHAR(255) NOT NULL
 		);
 
@@ -80,19 +81,46 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db}
 }
 
-func (r *UserRepository) CreateUser (user models.User) error {
+func (r *UserRepository) CreateUser(user models.UserRequest) (models.Profile, error) {
 	query := `
 		INSERT INTO users (username, email, password_hash)
 		VALUES ($1, $2, $3)
-		RETURNING ID
+		RETURNING id, created_at
 	`
-	err := r.db.QueryRow(query, user.Username, user.Email, user.Password).Scan(&user.ID)
+	profile := models.Profile{
+		Username: user.Username,
+		Email:    user.Email,
+	}
+	err := r.db.QueryRow(query, user.Username, user.Email, user.Password).Scan(&profile.ID, &profile.CreatedAt)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("Email или username уже заняты")
-		} else {
-			return fmt.Errorf("Ошибка при создании пользователя: %w", err)
-		}
+		return models.Profile{}, fmt.Errorf("Email или username уже заняты")
+	}
+	return profile, nil
+}
+
+func (r *UserRepository) ChangeName(id int, newName string) error {
+	row := r.db.QueryRow("SELECT username FROM users WHERE id = $1", id)
+	var username string
+	if err := row.Scan(&username); err != nil {
+		return fmt.Errorf("Пользователь не найден")
+	}
+	if username == newName {
+		return fmt.Errorf("Новое имя совпадает с текущим")
+	}
+	row = r.db.QueryRow("SELECT count(*) FROM users WHERE username = $1", newName)
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return fmt.Errorf("Неизвестная ошибка: %w", err)
+	}
+	if count != 0 {
+		return fmt.Errorf("Имя '%s' уже занято", newName)
+	}
+	res, err := r.db.Exec("UPDATE users SET username = $1 WHERE id = $2", newName, id)
+	if err != nil {
+		return fmt.Errorf("Ошибка обновления: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return errors.New("Пользователь не найден")
 	}
 	return nil
 }
