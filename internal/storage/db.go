@@ -2,10 +2,11 @@ package storage
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
+	"net/http"
 
-	"github.com/P3rCh1/chat-server/internal/models"
+	"github.com/P3rCh1/chat-server/internal/pkg/models"
+	"github.com/P3rCh1/chat-server/internal/pkg/msg"
 	_ "github.com/lib/pq"
 )
 
@@ -30,18 +31,7 @@ func NewDB(cfg Config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Successfully connected to PostgreSQL")
 	return db, nil
-}
-
-func InitDB() (*sql.DB, error) {
-	return NewDB(Config{
-		Host:     "localhost",
-		Port:     5432,
-		User:     "chat",
-		Password: "pass",
-		DBName:   "chatdb",
-	})
 }
 
 func ApplyMigrations(db *sql.DB) error {
@@ -93,7 +83,7 @@ func (r *UserRepository) CreateUser(user models.UserRequest) (models.Profile, er
 	}
 	err := r.db.QueryRow(query, user.Username, user.Email, user.Password).Scan(&profile.ID, &profile.CreatedAt)
 	if err != nil {
-		return models.Profile{}, fmt.Errorf("Email или username уже заняты")
+		return models.Profile{}, msg.UserOrEmailAlreadyExist
 	}
 	return profile, nil
 }
@@ -102,25 +92,25 @@ func (r *UserRepository) ChangeName(id int, newName string) error {
 	row := r.db.QueryRow("SELECT username FROM users WHERE id = $1", id)
 	var username string
 	if err := row.Scan(&username); err != nil {
-		return fmt.Errorf("Пользователь не найден")
+		return msg.UserNotFound
 	}
 	if username == newName {
-		return fmt.Errorf("Новое имя совпадает с текущим")
+		return msg.New(http.StatusBadRequest, "new name matches the current")
 	}
 	row = r.db.QueryRow("SELECT count(*) FROM users WHERE username = $1", newName)
 	var count int
 	if err := row.Scan(&count); err != nil {
-		return fmt.Errorf("Неизвестная ошибка: %w", err)
+		return msg.ServerError
 	}
 	if count != 0 {
-		return fmt.Errorf("Имя '%s' уже занято", newName)
+		return msg.UserAlreadyExist
 	}
 	res, err := r.db.Exec("UPDATE users SET username = $1 WHERE id = $2", newName, id)
 	if err != nil {
-		return fmt.Errorf("Ошибка обновления: %w", err)
+		return msg.ServerError
 	}
 	if rows, _ := res.RowsAffected(); rows == 0 {
-		return errors.New("Пользователь не найден")
+		return msg.UserNotFound
 	}
 	return nil
 }

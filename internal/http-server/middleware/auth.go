@@ -2,17 +2,20 @@ package middleware
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
+	"github.com/P3rCh1/chat-server/internal/pkg/msg"
 	"github.com/P3rCh1/chat-server/internal/utils"
 )
 
-func JWTAuth(next http.Handler) http.HandlerFunc {
+func JWTAuth(log *slog.Logger, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		const op = "http-server.handlers.middleware.auth.JWTAuth"
 		token := r.Header.Get("Authorization")
 		userID, err := utils.VerifyJWT(token)
 		if err != nil {
-			http.Error(w, "Требуется авторизация", http.StatusUnauthorized)
+			msg.UserNotFound.DropWithLog(w, log, op)
 			return
 		}
 		ctx := context.WithValue(r.Context(), "userID", userID)
