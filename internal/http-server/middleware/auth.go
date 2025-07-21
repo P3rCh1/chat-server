@@ -9,16 +9,17 @@ import (
 	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
 )
 
-func JWTAuth(log *slog.Logger, jwt tokens.TokenProvider, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "http-server.handlers.middleware.auth.JWTAuth"
-		token := r.Header.Get("Authorization")
-		userID, err := jwt.Verify(token)
-		if err != nil {
-			msg.UserNotFound.DropWithLog(w, log, op)
-			return
-		}
-		ctx := context.WithValue(r.Context(), "userID", userID)
-		next.ServeHTTP(w, r.WithContext(ctx))
+func Auth(log *slog.Logger, jwt tokens.TokenProvider) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := r.Header.Get("Authorization")
+			userID, err := jwt.Verify(token)
+			if err != nil {
+				msg.UserNotFound.Drop(w)
+				return
+			}
+			ctx := context.WithValue(r.Context(), "userID", userID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }

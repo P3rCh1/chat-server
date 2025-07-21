@@ -15,26 +15,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Register(db *sql.DB, log *slog.Logger) http.HandlerFunc {
+func Register(db *sql.DB, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.auth.Register"
-
 		var user models.UserRequest
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-			msg.InvalidData.DropWithLog(w, log, op)
+			msg.InvalidData.Drop(w)
 			return
 		}
 		if user.Username == "" || user.Password == "" || user.Email == "" {
-			msg.EmptyFields.DropWithLog(w, log, op)
+			msg.EmptyFields.Drop(w)
 			return
 		}
 		if !email.Check(user.Email) {
-			msg.BadEmail.DropWithLog(w, log, op)
+			msg.BadEmail.Drop(w)
 			return
 		}
 		hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
-			msg.ServerError.DropWithLog(w, log, op+": hash password")
+			msg.ServerError.Drop(w)
 			return
 		}
 		user.Password = string(hashedPass)
@@ -42,42 +40,40 @@ func Register(db *sql.DB, log *slog.Logger) http.HandlerFunc {
 		profile, err := rep.CreateUser(user)
 		var errHTTP msg.ErrorHTTP
 		if err != nil && errors.As(err, &errHTTP) {
-			errHTTP.DropWithLog(w, log, op)
+			errHTTP.Drop(w)
 			return
 		}
-		msg.SendJSONWithLog(w, http.StatusCreated, profile, log, op)
+		msg.SendJSON(w, http.StatusCreated, profile)
 	}
 }
 
 func Login(db *sql.DB, log *slog.Logger, jwt tokens.TokenProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.auth.Login"
 		var input models.LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			msg.InvalidData.DropWithLog(w, log, op)
+			msg.InvalidData.Drop(w)
 			return
 		}
 		if input.Email == "" || input.Password == "" {
-			msg.EmptyFields.DropWithLog(w, log, op)
+			msg.EmptyFields.Drop(w)
 			return
 		}
 		query := "SELECT id, password_hash FROM users WHERE email = $1"
 		var id int
 		var password string
 		if err := db.QueryRow(query, input.Email).Scan(&id, &password); err != nil {
-			msg.UserNotFound.DropWithLog(w, log, op)
+			msg.UserNotFound.Drop(w)
 			return
 		}
 		if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(input.Password)); err != nil {
-			msg.InvalidPassword.DropWithLog(w, log, op)
+			msg.InvalidPassword.Drop(w)
 			return
 		}
 		jwt, err := jwt.Gen(id)
 		if err != nil {
-			msg.ServerError.DropWithLog(w, log, op+": jwt generation")
+			msg.ServerError.Drop(w)
 			return
 		}
 		msg.SendJSON(w, http.StatusOK, map[string]string{"token": jwt})
-		log.Info(op, "status", http.StatusOK)
 	}
 }

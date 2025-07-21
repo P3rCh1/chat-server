@@ -1,7 +1,6 @@
 package msg
 
 import (
-	"log/slog"
 	"net/http"
 )
 
@@ -34,13 +33,4 @@ func New(code int, message string) ErrorHTTP {
 
 func (e ErrorHTTP) Drop(w http.ResponseWriter) {
 	http.Error(w, e.Message, e.Code)
-}
-
-func (e ErrorHTTP) DropWithLog(w http.ResponseWriter, log *slog.Logger, logInfo string) {
-	log.Info(
-		logInfo,
-		"code", e.Code,
-		"message", e.Message,
-	)
-	e.Drop(w)
 }
