@@ -13,7 +13,7 @@ type Config struct {
 }
 
 type HTTP struct {
-	Host string `yaml: "host"`
+	Host string `yaml:"host"`
 	Port string `yaml:"port"`
 }
 
