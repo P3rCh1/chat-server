@@ -13,8 +13,12 @@ type Config struct {
 }
 
 type HTTP struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
+	Host            string        `yaml:"host"`
+	Port            string        `yaml:"port"`
+	ReadTimeout     time.Duration `yaml:"read_timeout"`
+	WriteTimeout    time.Duration `yaml:"write_timeout"`
+	IdleTimeout     time.Duration `yaml:"idle_timeout"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 }
 
 type DB struct {

@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/P3rCh1/chat-server/internal/config"
 	"github.com/P3rCh1/chat-server/internal/http-server/handlers"
@@ -40,8 +39,11 @@ func Run(cfg *config.Config) {
 		r.Put("/change-name", handlers.ChangeName(db, logger))
 	})
 	server := &http.Server{
-		Addr:    cfg.HTTP.Host + ":" + cfg.HTTP.Port,
-		Handler: router,
+		Addr:         cfg.HTTP.Host + ":" + cfg.HTTP.Port,
+		Handler:      router,
+		ReadTimeout:  cfg.HTTP.ReadTimeout,
+		WriteTimeout: cfg.HTTP.WriteTimeout,
+		IdleTimeout:  cfg.HTTP.IdleTimeout,
 	}
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
@@ -55,7 +57,7 @@ func Run(cfg *config.Config) {
 		}
 	}()
 	<-done
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second) // * cfg...)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer cancel()
 	logger.Info("shutting down server...")
 	if err := server.Shutdown(shutdownCtx); err != nil {
