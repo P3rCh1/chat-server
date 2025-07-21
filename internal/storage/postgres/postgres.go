@@ -1,27 +1,20 @@
-package storage
+package postgres
 
 import (
 	"database/sql"
 	"fmt"
 	"net/http"
 
-	"github.com/P3rCh1/chat-server/internal/pkg/models"
+	"github.com/P3rCh1/chat-server/internal/config"
+	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/msg"
 	_ "github.com/lib/pq"
 )
 
-type Config struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	DBName   string
-}
-
-func NewDB(cfg Config) (*sql.DB, error) {
+func New(cfg *config.DB) (*sql.DB, error) {
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName,
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name,
 	)
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
