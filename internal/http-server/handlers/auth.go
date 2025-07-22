@@ -10,8 +10,8 @@ import (
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/msg"
 	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
+	"github.com/P3rCh1/chat-server/internal/pkg/validate"
 	"github.com/P3rCh1/chat-server/internal/storage/postgres"
-	"github.com/P3rCh1/chat-server/pkg/email"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,8 +26,16 @@ func Register(db *sql.DB, logger *slog.Logger) http.HandlerFunc {
 			msg.EmptyFields.Drop(w)
 			return
 		}
-		if !email.Check(user.Email) {
+		if !validate.Email(user.Email) {
 			msg.BadEmail.Drop(w)
+			return
+		}
+		if !validate.Username(user.Username) {
+			msg.BadUsername.Drop(w)
+			return
+		}
+		if !validate.Password(user.Password) {
+			msg.BadPassword.Drop(w)
 			return
 		}
 		hashedPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)

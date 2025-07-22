@@ -7,6 +7,8 @@ import (
 var (
 	InvalidData             = New(http.StatusBadRequest, "invalid data")
 	BadEmail                = New(http.StatusBadRequest, "invalid email")
+	BadUsername             = New(http.StatusBadRequest, "Username must be 3-20 characters long and contain only letters, numbers or underscores")
+	BadPassword             = New(http.StatusBadRequest, "Password must be 8-128 characters long")
 	EmptyFields             = New(http.StatusBadRequest, "missing fields")
 	ServerError             = New(http.StatusInternalServerError, "server error")
 	UserNotFound            = New(http.StatusUnauthorized, "user not found")
