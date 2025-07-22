@@ -19,6 +19,7 @@ type HTTP struct {
 	WriteTimeout    time.Duration `yaml:"write_timeout"`
 	IdleTimeout     time.Duration `yaml:"idle_timeout"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
+	RateLimit       int           `yaml:"rate_limit"`
 }
 
 type DB struct {

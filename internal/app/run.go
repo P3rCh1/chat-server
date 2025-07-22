@@ -9,11 +9,12 @@ import (
 
 	"github.com/P3rCh1/chat-server/internal/config"
 	"github.com/P3rCh1/chat-server/internal/http-server/handlers"
-	"github.com/P3rCh1/chat-server/internal/http-server/middleware"
+	mw "github.com/P3rCh1/chat-server/internal/http-server/middleware"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
 	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func Run(cfg *config.Config) {
@@ -29,12 +30,16 @@ func Run(cfg *config.Config) {
 	}
 	jwt := tokens.NewJWT(&cfg.JWT)
 	router := chi.NewRouter()
-	router.Use(middleware.LogRequests(logger))
-	router.Use(middleware.LogErrors(logger))
+	router.Use(mw.RequestID)
+	router.Use(middleware.Recoverer)
+	router.Use(mw.Secure)
+	router.Use(middleware.Throttle(cfg.HTTP.RateLimit))
+	router.Use(mw.LogRequests(logger))
+	router.Use(mw.LogErrors(logger))
 	router.Post("/register", handlers.Register(db, logger))
-	router.Post("/login", handlers.Login(db, logger, jwt))
+	router.With(middleware.Throttle(5)).Post("/login", handlers.Login(db, logger, jwt))
 	router.Group(func(r chi.Router) {
-		r.Use(middleware.Auth(logger, jwt))
+		r.Use(mw.Auth(logger, jwt))
 		r.Get("/profile", handlers.Profile(db, logger))
 		r.Put("/change-name", handlers.ChangeName(db, logger))
 	})

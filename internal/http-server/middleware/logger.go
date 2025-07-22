@@ -1,18 +1,33 @@
 package middleware
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
+
+const RequestIDKey = "request_id"
+
+func RequestID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := uuid.New().String()[:8]
+		ctx := context.WithValue(r.Context(), RequestIDKey, id)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func LogRequests(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
+			requestID := r.Context().Value(RequestIDKey).(string)
 			next.ServeHTTP(w, r)
 			logger.Info(
 				"HTTP request",
+				slog.String("id", requestID),
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
 				slog.String("remote_addr", r.RemoteAddr),
@@ -27,10 +42,12 @@ func LogErrors(logger *slog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			rw := NewResponseWrapper(w)
+			requestID := r.Context().Value(RequestIDKey).(string)
 			next.ServeHTTP(rw, r)
 			if rw.Status() >= 400 {
 				logger.Info(
 					"HTTP error",
+					slog.String("id", requestID),
 					slog.Int("status", rw.Status()),
 					slog.String("path", r.URL.Path),
 				)
