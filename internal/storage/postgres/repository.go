@@ -81,18 +81,27 @@ func (r *Repository) IsRoomMember(userID int, roomID int) error {
 	return nil
 }
 
-func (r *Repository) StoreMsg(msg *models.Message) error {
+func (r *Repository) StoreMsg(client *models.Client, msg *models.Message) error {
 	const query = `
         INSERT INTO messages (
             room_id, 
-            user_id, 
+            user_id,
             text
         ) VALUES ($1, $2, $3)
         RETURNING timestamp
     `
-	row := r.db.QueryRow(query, msg.RoomID, msg.UserID, msg.Text)
+	row := r.db.QueryRow(query, client.RoomID, client.UserID, msg.Text)
 	if err := row.Scan(&msg.Timestamp); err != nil {
 		return errors.New("failed to store message")
 	}
 	return nil
+}
+
+func (r *Repository) GetUsername(userID int) (string, error) {
+	var username string
+	err := r.db.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&username)
+	if err != nil {
+		return "", errors.New("can not find user")
+	}
+	return username, nil
 }
