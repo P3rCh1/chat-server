@@ -1,23 +1,20 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/msg"
-	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
 	"github.com/P3rCh1/chat-server/internal/pkg/validate"
 	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Register(db *sql.DB, logger *slog.Logger) http.HandlerFunc {
+func Register(tools *models.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var user models.UserRequest
+		var user models.RegisterRequest
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			msg.InvalidData.Drop(w)
 			return
@@ -44,7 +41,7 @@ func Register(db *sql.DB, logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 		user.Password = string(hashedPass)
-		rep := postgres.NewUserRepository(db)
+		rep := postgres.NewRepository(tools.DB)
 		profile, err := rep.CreateUser(user)
 		var errHTTP msg.ErrorHTTP
 		if err != nil && errors.As(err, &errHTTP) {
@@ -55,7 +52,7 @@ func Register(db *sql.DB, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func Login(db *sql.DB, log *slog.Logger, jwt tokens.TokenProvider) http.HandlerFunc {
+func Login(tools *models.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input models.LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -69,7 +66,7 @@ func Login(db *sql.DB, log *slog.Logger, jwt tokens.TokenProvider) http.HandlerF
 		query := "SELECT id, password_hash FROM users WHERE email = $1"
 		var id int
 		var password string
-		if err := db.QueryRow(query, input.Email).Scan(&id, &password); err != nil {
+		if err := tools.DB.QueryRow(query, input.Email).Scan(&id, &password); err != nil {
 			msg.UserNotFound.Drop(w)
 			return
 		}
@@ -77,7 +74,7 @@ func Login(db *sql.DB, log *slog.Logger, jwt tokens.TokenProvider) http.HandlerF
 			msg.InvalidPassword.Drop(w)
 			return
 		}
-		jwt, err := jwt.Gen(id)
+		jwt, err := tools.TokenProvider.Gen(id)
 		if err != nil {
 			msg.ServerError.Drop(w)
 			return

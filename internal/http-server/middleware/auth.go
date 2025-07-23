@@ -2,14 +2,13 @@ package middleware
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 
 	"github.com/P3rCh1/chat-server/internal/pkg/msg"
 	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
 )
 
-func Auth(log *slog.Logger, jwt tokens.TokenProvider) func(http.Handler) http.Handler {
+func Auth(jwt tokens.TokenProvider) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get("Authorization")

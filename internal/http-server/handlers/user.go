@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/P3rCh1/chat-server/internal/models"
@@ -11,10 +10,10 @@ import (
 	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 )
 
-func Profile(db *sql.DB, log *slog.Logger) http.HandlerFunc {
+func Profile(tools *models.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Context().Value("userID").(int)
-		row := db.QueryRow("SELECT id, username, email, created_at FROM users WHERE id = $1", userID)
+		row := tools.DB.QueryRow("SELECT id, username, email, created_at FROM users WHERE id = $1", userID)
 		var profile models.Profile
 		err := row.Scan(&profile.ID, &profile.Username, &profile.Email, &profile.CreatedAt)
 		if err != nil {
@@ -29,7 +28,7 @@ func Profile(db *sql.DB, log *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func ChangeName(db *sql.DB, log *slog.Logger) http.HandlerFunc {
+func ChangeName(tools *models.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.Context().Value("userID").(int)
 		var request struct {
@@ -43,7 +42,7 @@ func ChangeName(db *sql.DB, log *slog.Logger) http.HandlerFunc {
 			msg.EmptyFields.Drop(w)
 			return
 		}
-		err := postgres.NewUserRepository(db).ChangeName(id, request.NewName)
+		err := postgres.NewRepository(tools.DB).ChangeName(id, request.NewName)
 		if err != nil {
 			msg.UserAlreadyExist.Drop(w)
 			return

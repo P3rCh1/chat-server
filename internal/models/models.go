@@ -1,11 +1,17 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"log/slog"
+	"time"
 
-type UserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"Password"`
+	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
+)
+
+type Tools struct {
+	DB            *sql.DB
+	TokenProvider tokens.TokenProvider
+	Log           *slog.Logger
 }
 
 type Profile struct {
@@ -13,11 +19,6 @@ type Profile struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created-at"`
-}
-
-type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
 }
 
 type Room struct {
@@ -28,9 +29,8 @@ type Room struct {
 }
 
 type Message struct {
-	ID        int       `json:"id"`
 	RoomID    int       `json:"room_id"`
 	UserID    int       `json:"user_id"`
-	Text      string    `json:"text"`
+	Text      *string   `json:"text"`
 	Timestamp time.Time `json:"timestamp"`
 }
