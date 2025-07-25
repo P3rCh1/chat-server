@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/msg"
@@ -33,6 +35,31 @@ func (r *Repository) CreateUser(user models.RegisterRequest) (models.Profile, er
 		return models.Profile{}, msg.UserOrEmailAlreadyExist
 	}
 	return profile, nil
+}
+
+func (r *Repository) MustCreateInternalUser(log *slog.Logger, username string) int {
+	const query = `
+        WITH insert_attempt AS (
+            INSERT INTO users (username, email, password_hash)
+            VALUES ($1, $1, '')
+            ON CONFLICT (username) DO NOTHING
+            RETURNING id
+        )
+        SELECT id FROM insert_attempt
+        UNION ALL
+        SELECT id FROM users WHERE username = $1
+        LIMIT 1
+    `
+	var id int
+	err := r.db.QueryRow(query, username).Scan(&id)
+	if err != nil {
+		log.Error(
+			"internal.storage.postgres.MustCreateInternalUser",
+			"error", err.Error(),
+		)
+		os.Exit(1)
+	}
+	return id
 }
 
 func (r *Repository) ChangeName(id int, newName string) error {
@@ -81,16 +108,16 @@ func (r *Repository) IsRoomMember(userID int, roomID int) error {
 	return nil
 }
 
-func (r *Repository) StoreMsg(client *models.Client, msg *models.Message) error {
+func (r *Repository) StoreMsg(msg *models.Message, roomID, userID int) error {
 	const query = `
         INSERT INTO messages (
             room_id, 
             user_id,
             text
         ) VALUES ($1, $2, $3)
-        RETURNING timestamp
+		RETURNING timestamp
     `
-	row := r.db.QueryRow(query, client.RoomID, client.UserID, msg.Text)
+	row := r.db.QueryRow(query, roomID, userID, msg.Text)
 	if err := row.Scan(&msg.Timestamp); err != nil {
 		return errors.New("failed to store message")
 	}

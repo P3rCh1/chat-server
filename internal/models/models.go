@@ -16,6 +16,7 @@ type Tools struct {
 	Log           *slog.Logger
 	WSUpgrader    *websocket.Upgrader
 	Cfg           *config.Config
+	Pkg           *Package
 }
 
 type Profile struct {
@@ -42,4 +43,9 @@ type Client struct {
 	UserID   int
 	Username string
 	RoomID   int
+}
+
+type Package struct {
+	SystemUserID int
+	ErrorUserID  int
 }

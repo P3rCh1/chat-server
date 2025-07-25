@@ -8,7 +8,7 @@ import (
 type Config struct {
 	PKG       Package   `yaml:"pkg"`
 	HTTP      HTTP      `yaml:"http"`
-	WebSocket Websocket `yaml: "websocket"`
+	WebSocket Websocket `yaml:"websocket"`
 	DB        DB        `yaml:"db"`
 	JWT       JWT       `yaml:"jwt"`
 	Logger    LogConfig `yaml:"log"`
@@ -16,6 +16,7 @@ type Config struct {
 
 type Package struct {
 	SystemUsername string `yaml:"system_username"`
+	ErrorUsername  string `yaml:"error_username"`
 }
 
 type HTTP struct {

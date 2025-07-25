@@ -56,33 +56,40 @@ func Run(cfg *config.Config) {
 			"port", cfg.HTTP.Port,
 		)
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			tools.Log.Error("server error", "error", err)
+			tools.Log.Error(
+				"server error",
+				"error", err,
+			)
 		}
 	}()
 	<-done
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer cancel()
 	tools.Log.Info("shutting down server...")
-	handlers.ShutdownWS(shutdownCtx, tools)
+	grace := true
+	if err := handlers.ShutdownWS(shutdownCtx, tools); err != nil {
+		tools.Log.Error(
+			"websocket shutdown error",
+			"error", err,
+		)
+		grace = false
+	}
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		tools.Log.Error("server shutdown error", "error", err)
-	} else {
+		tools.Log.Error(
+			"server shutdown error",
+			"error", err,
+		)
+		grace = false
+	}
+	if grace {
 		tools.Log.Info("server stopped gracefully")
 	}
 }
 
 func mustPrepareTools(cfg *config.Config) *models.Tools {
 	log := logger.New(&cfg.Logger)
-	db, err := postgres.New(&cfg.DB)
-	if err != nil {
-		log.Error("storage.postgres.New", "error", err.Error())
-		os.Exit(1)
-	}
-	err = postgres.ApplyMigrations(db)
-	if err != nil {
-		log.Error("internal.storage.postgres.ApplyMigrations", "error", err.Error())
-		os.Exit(1)
-	}
+	db := postgres.MustOpen(log, &cfg.DB)
+	postgres.MustApplyMigrations(log, db)
 	jwt := tokens.NewJWT(&cfg.JWT)
 	ws := &websocket.Upgrader{
 		WriteBufferSize:   cfg.WebSocket.WriteBufSize,
@@ -104,12 +111,17 @@ func mustPrepareTools(cfg *config.Config) *models.Tools {
 			return true
 		}
 	}
+	repo := postgres.NewRepository(db)
+	pkg := &models.Package{
+		SystemUserID: repo.MustCreateInternalUser(log, cfg.PKG.SystemUsername),
+		ErrorUserID:  repo.MustCreateInternalUser(log, cfg.PKG.ErrorUsername),
+	}
 	return &models.Tools{
 		Log:           log,
 		TokenProvider: jwt,
 		DB:            db,
 		WSUpgrader:    ws,
 		Cfg:           cfg,
+		Pkg:           pkg,
 	}
-
 }

@@ -3,28 +3,41 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/P3rCh1/chat-server/internal/config"
 	_ "github.com/lib/pq"
 )
 
-func New(cfg *config.DB) (*sql.DB, error) {
+func MustOpen(log *slog.Logger, cfg *config.DB) *sql.DB {
+	var err error
+	defer func() {
+		if err != nil {
+			log.Error(
+				"storage.postgres.New",
+				"error", err.Error(),
+			)
+			os.Exit(1)
+		}
+	}()
+	var db *sql.DB
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name,
 	)
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	err = db.Ping()
 	if err != nil {
-		return nil, err
+		return nil
 	}
-	return db, nil
+	return db
 }
 
-func ApplyMigrations(db *sql.DB) error {
+func MustApplyMigrations(log *slog.Logger, db *sql.DB) {
 	query := `
 		CREATE TABLE IF NOT EXISTS users (
 	    	id SERIAL PRIMARY KEY,
@@ -57,5 +70,11 @@ func ApplyMigrations(db *sql.DB) error {
 		);
 	`
 	_, err := db.Exec(query)
-	return err
+	if err != nil {
+		log.Error(
+			"internal.storage.postgres.ApplyMigrations",
+			"error", err.Error(),
+		)
+		os.Exit(1)
+	}
 }

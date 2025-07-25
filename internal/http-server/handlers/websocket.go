@@ -15,7 +15,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var onlineInRooms sync.Map
+var (
+	roomHandlers = make(map[int]*map[*handler]struct{})
+	mu           sync.Mutex
+)
 
 type handler struct {
 	client   models.Client
@@ -43,25 +46,20 @@ func newHandler(userID int, tools *models.Tools) (*handler, error) {
 	return &h, nil
 }
 
-func ShutdownWS(ctx context.Context, tools *models.Tools) bool {
-	success := true
-	onlineInRooms.Range(func(_, room interface{}) bool {
-		room.(*sync.Map).Range(func(h, _ interface{}) bool {
+func ShutdownWS(ctx context.Context, tools *models.Tools) error {
+	mu.Lock()
+	defer mu.Unlock()
+	for _, handlersInRoom := range roomHandlers {
+		for h := range *handlersInRoom {
 			select {
 			case <-ctx.Done():
-				success = false
-				return false
+				return errors.New("shutdown timer end before close websocket")
 			default:
-				h.(*handler).cancel()
-				return true
+				h.cancel()
 			}
-		})
-		return true
-	})
-	if !success {
-		tools.Log.Warn("shutdown timer end before close websocket")
+		}
 	}
-	return success
+	return nil
 }
 
 func Websocket(tools *models.Tools) http.HandlerFunc {
@@ -97,14 +95,14 @@ func Websocket(tools *models.Tools) http.HandlerFunc {
 			"new connection",
 			"userID", userID,
 		)
-		h.storeToRoom(0)
+		h.toRoom(0)
 		go h.writer()
 		go h.reader()
 	}
 }
 
 func (h *handler) writer() {
-	defer h.close()
+	defer h.clear()
 	ticker := time.NewTicker(h.tools.Cfg.WebSocket.PingPeriod)
 	defer ticker.Stop()
 	failedPings := 0
@@ -136,7 +134,6 @@ func (h *handler) writer() {
 			}
 		} else {
 			failedPings = 0
-			continue
 		}
 	}
 }
@@ -172,18 +169,32 @@ func (h *handler) reader() {
 				h.tools.Log.Info(
 					"request processing failed",
 					"userID", h.client.UserID,
-					"error", err.Error())
-				if err := h.conn.WriteJSON(map[string]string{"error": err.Error()}); err != nil {
-					return
-				}
+					"error", err.Error(),
+				)
+				h.notify(&models.Message{
+					Username: h.tools.Cfg.PKG.ErrorUsername,
+					Text:     err.Error(),
+				}, h.tools.Pkg.ErrorUserID)
 			}
 		}
-
 	}
 }
 
-func (h *handler) close() {
-	h.leave()
+func (h *handler) clear() {
+	roomID := h.client.RoomID
+	mu.Lock()
+	handlers, ok := roomHandlers[roomID]
+	if ok {
+		delete(*handlers, h)
+	}
+	mu.Unlock()
+	if roomID != 0 {
+		msg := &models.Message{
+			Username: h.tools.Cfg.PKG.SystemUsername,
+			Text:     h.client.Username + " leaved the room",
+		}
+		h.broadcastToRoom(msg, roomID, h.tools.Pkg.SystemUserID)
+	}
 	close(h.sendChan)
 	h.conn.Close()
 	h.tools.Log.Info(
@@ -192,19 +203,19 @@ func (h *handler) close() {
 	)
 }
 
-func (h *handler) sendMessage(message *models.Message) error {
+func (h *handler) sendMessage(msg *models.Message, fromID int) error {
 	select {
 	case <-h.closeCtx.Done():
 		return nil
 	default:
 	}
 	select {
-	case h.sendChan <- message:
+	case h.sendChan <- msg:
 		return nil
 	case <-time.After(h.tools.Cfg.WebSocket.WriteWait):
 		h.tools.Log.Warn(
 			"message send timeout",
-			"userID", h.client.UserID,
+			"userID", fromID,
 			"roomID", h.client.RoomID)
 		return errors.New("the message delivery time has expired")
 	case <-h.closeCtx.Done():
@@ -233,8 +244,8 @@ func (h *handler) route(r *models.WSRequest) error {
 	}
 }
 
-func (h *handler) broadcastToRoom(msg *models.Message, roomID int) error {
-	err := postgres.NewRepository(h.tools.DB).StoreMsg(&h.client, msg)
+func (h *handler) broadcastToRoom(msg *models.Message, roomID int, userID int) error {
+	err := postgres.NewRepository(h.tools.DB).StoreMsg(msg, roomID, userID)
 	if err != nil {
 		return err
 	}
@@ -244,16 +255,12 @@ func (h *handler) broadcastToRoom(msg *models.Message, roomID int) error {
 		"username", msg.Username,
 		"text", msg.Text,
 	)
-	val, ok := onlineInRooms.Load(roomID)
-	if !ok {
-		return nil
+	mu.Lock()
+	defer mu.Unlock()
+	handlersInRoom := roomHandlers[roomID]
+	for onlineHandler := range *handlersInRoom {
+		onlineHandler.sendMessage(msg, userID)
 	}
-	inRoom := val.(*sync.Map)
-	inRoom.Range(func(targetInterface, _ any) bool {
-		h := targetInterface.(*handler)
-		h.sendMessage(msg)
-		return true
-	})
 	return nil
 }
 
@@ -267,7 +274,7 @@ func (h *handler) message(msg *models.Message) error {
 	if len(msg.Text) > h.tools.Cfg.WebSocket.MsgMaxLength {
 		return fmt.Errorf("message should be less %d symbols long", h.tools.Cfg.WebSocket.MsgMaxLength)
 	}
-	h.broadcastToRoom(msg, h.client.RoomID)
+	h.broadcastToRoom(msg, h.client.RoomID, h.client.UserID)
 	return nil
 }
 
@@ -279,24 +286,26 @@ func (h *handler) join(newRoomID int) error {
 	if err := postgres.NewRepository(h.tools.DB).IsRoomMember(h.client.UserID, newRoomID); err != nil {
 		return err
 	}
-	h.storeToRoom(newRoomID)
+	h.toRoom(newRoomID)
 	msg := &models.Message{
 		Username: h.tools.Cfg.PKG.SystemUsername,
 		Text:     h.client.Username + " joined the room",
 	}
-	h.broadcastToRoom(msg, newRoomID)
+	h.broadcastToRoom(msg, newRoomID, h.tools.Pkg.SystemUserID)
 	return nil
 }
 
-func (h *handler) storeToRoom(roomID int) {
+func (h *handler) toRoom(roomID int) {
 	h.client.RoomID = roomID
-	newOnline, ok := onlineInRooms.Load(roomID)
+	mu.Lock()
+	defer mu.Unlock()
+	roomOnline, ok := roomHandlers[roomID]
 	if !ok {
-		m := new(sync.Map)
-		m.Store(h, struct{}{})
-		onlineInRooms.Store(roomID, m)
+		m := make(map[*handler]struct{})
+		m[h] = struct{}{}
+		roomHandlers[roomID] = &m
 	} else {
-		newOnline.(*sync.Map).Store(h, struct{}{})
+		(*roomOnline)[h] = struct{}{}
 	}
 }
 
@@ -305,15 +314,28 @@ func (h *handler) leave() error {
 	if h.client.RoomID == 0 {
 		return errors.New("not connected to any room")
 	}
-	handlers, ok := onlineInRooms.Load(roomID)
+	mu.Lock()
+	handlers, ok := roomHandlers[roomID]
 	if ok {
-		handlers.(*sync.Map).Delete(h)
+		delete(*handlers, h)
 	}
-	h.storeToRoom(0)
+	mu.Unlock()
+	h.toRoom(0)
 	msg := &models.Message{
+		Username: h.tools.Cfg.PKG.SystemUsername,
+		Text:     "you leaved the room",
+	}
+	h.notify(msg, h.tools.Pkg.SystemUserID)
+	msg = &models.Message{
 		Username: h.tools.Cfg.PKG.SystemUsername,
 		Text:     h.client.Username + " leaved the room",
 	}
-	h.broadcastToRoom(msg, roomID)
+	msg.Text = h.client.Username + " leaved the room"
+	h.broadcastToRoom(msg, roomID, h.tools.Pkg.SystemUserID)
 	return nil
+}
+
+func (h *handler) notify(msg *models.Message, fromID int) {
+	msg.Timestamp = time.Now()
+	h.sendMessage(msg, fromID)
 }
