@@ -6,10 +6,16 @@ import (
 )
 
 type Config struct {
-	HTTP   HTTP      `yaml:"http"`
-	DB     DB        `yaml:"db"`
-	JWT    JWT       `yaml:"jwt"`
-	Logger LogConfig `yaml:"log"`
+	PKG       Package   `yaml:"pkg"`
+	HTTP      HTTP      `yaml:"http"`
+	WebSocket Websocket `yaml: "websocket"`
+	DB        DB        `yaml:"db"`
+	JWT       JWT       `yaml:"jwt"`
+	Logger    LogConfig `yaml:"log"`
+}
+
+type Package struct {
+	SystemUsername string `yaml:"system_username"`
 }
 
 type HTTP struct {
@@ -20,6 +26,21 @@ type HTTP struct {
 	IdleTimeout     time.Duration `yaml:"idle_timeout"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 	RateLimit       int           `yaml:"rate_limit"`
+}
+
+type Websocket struct {
+	MsgMaxSize        int           `yaml:"msg_max_size"`
+	MsgMaxLength      int           `yaml:"msg_max_length"`
+	WriteBufSize      int           `yaml:"write_buf_size"`
+	ReadBufSize       int           `yaml:"read_buf_size"`
+	MsgBufSize        int           `yaml:"msg_buf_size"`
+	EnableCompression bool          `yaml:"enable_compression"`
+	WriteWait         time.Duration `yaml:"write_wait"`
+	PongWait          time.Duration `yaml:"pong_wait"`
+	PingPeriod        time.Duration `yaml:"ping_period"`
+	MaxFailedPings    int           `yaml:"max_failed_pings"`
+	CheckOrigin       bool          `yaml:"check_origin"`
+	AllowedOrigins    []string      `yaml:"allowed_origins"`
 }
 
 type DB struct {

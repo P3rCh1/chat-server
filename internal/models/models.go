@@ -5,13 +5,17 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/P3rCh1/chat-server/internal/config"
 	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
+	"github.com/gorilla/websocket"
 )
 
 type Tools struct {
 	DB            *sql.DB
 	TokenProvider tokens.TokenProvider
 	Log           *slog.Logger
+	WSUpgrader    *websocket.Upgrader
+	Cfg           *config.Config
 }
 
 type Profile struct {

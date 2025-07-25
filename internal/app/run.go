@@ -16,6 +16,7 @@ import (
 	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/websocket"
 )
 
 func Run(cfg *config.Config) {
@@ -62,6 +63,7 @@ func Run(cfg *config.Config) {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer cancel()
 	tools.Log.Info("shutting down server...")
+	handlers.ShutdownWS(shutdownCtx, tools)
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		tools.Log.Error("server shutdown error", "error", err)
 	} else {
@@ -82,9 +84,32 @@ func mustPrepareTools(cfg *config.Config) *models.Tools {
 		os.Exit(1)
 	}
 	jwt := tokens.NewJWT(&cfg.JWT)
+	ws := &websocket.Upgrader{
+		WriteBufferSize:   cfg.WebSocket.WriteBufSize,
+		ReadBufferSize:    cfg.WebSocket.ReadBufSize,
+		EnableCompression: cfg.WebSocket.EnableCompression,
+	}
+	if cfg.WebSocket.CheckOrigin {
+		ws.CheckOrigin = func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			for _, allowed := range cfg.WebSocket.AllowedOrigins {
+				if origin == allowed {
+					return true
+				}
+			}
+			return false
+		}
+	} else {
+		ws.CheckOrigin = func(r *http.Request) bool {
+			return true
+		}
+	}
 	return &models.Tools{
 		Log:           log,
 		TokenProvider: jwt,
 		DB:            db,
+		WSUpgrader:    ws,
+		Cfg:           cfg,
 	}
+
 }
