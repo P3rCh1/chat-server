@@ -17,22 +17,24 @@ import (
 
 var (
 	roomHandlers = make(map[int]*map[*handler]struct{})
-	mu           sync.Mutex
+	mu           sync.RWMutex
 )
 
 type handler struct {
-	client   models.Client
-	conn     *websocket.Conn
-	tools    *models.Tools
-	sendChan chan *models.Message
-	closeCtx context.Context
-	cancel   context.CancelFunc
+	client    models.Client
+	conn      *websocket.Conn
+	tools     *models.Tools
+	sendChan  chan *models.Message
+	closeCtx  context.Context
+	closeDone chan struct{}
+	cancel    context.CancelFunc
 }
 
 func newHandler(userID int, tools *models.Tools) (*handler, error) {
 	var h handler
 	h.sendChan = make(chan *models.Message, tools.Cfg.WebSocket.MsgBufSize)
 	h.closeCtx, h.cancel = context.WithCancel(context.Background())
+	h.closeDone = make(chan struct{})
 	h.tools = tools
 	h.client = models.Client{
 		UserID: userID,
@@ -47,17 +49,30 @@ func newHandler(userID int, tools *models.Tools) (*handler, error) {
 }
 
 func ShutdownWS(ctx context.Context, tools *models.Tools) error {
-	mu.Lock()
-	defer mu.Unlock()
+	var grace = true
+	var wg sync.WaitGroup
+	mu.RLock()
 	for _, handlersInRoom := range roomHandlers {
+		wg.Add(len(*handlersInRoom))
 		for h := range *handlersInRoom {
-			select {
-			case <-ctx.Done():
-				return errors.New("shutdown timer end before close websocket")
-			default:
+			go func(h *handler) {
+				defer wg.Done()
 				h.cancel()
-			}
+				select {
+				case <-ctx.Done():
+					grace = false
+					return
+				case <-h.closeDone:
+					return
+				}
+			}(h)
+
 		}
+	}
+	mu.RUnlock()
+	wg.Wait()
+	if !grace {
+		return errors.New("shutdown timer end before close websocket")
 	}
 	return nil
 }
@@ -102,7 +117,7 @@ func Websocket(tools *models.Tools) http.HandlerFunc {
 }
 
 func (h *handler) writer() {
-	defer h.clear()
+	defer h.close()
 	ticker := time.NewTicker(h.tools.Cfg.WebSocket.PingPeriod)
 	defer ticker.Stop()
 	failedPings := 0
@@ -114,10 +129,7 @@ func (h *handler) writer() {
 		default:
 		}
 		select {
-		case msg, ok := <-h.sendChan:
-			if !ok {
-				return
-			}
+		case msg := <-h.sendChan:
 			h.conn.SetWriteDeadline(time.Now().Add(h.tools.Cfg.WebSocket.WriteWait))
 			err = h.conn.WriteJSON(*msg)
 		case <-ticker.C:
@@ -180,7 +192,8 @@ func (h *handler) reader() {
 	}
 }
 
-func (h *handler) clear() {
+func (h *handler) close() {
+	defer close(h.closeDone)
 	roomID := h.client.RoomID
 	mu.Lock()
 	handlers, ok := roomHandlers[roomID]
@@ -255,8 +268,8 @@ func (h *handler) broadcastToRoom(msg *models.Message, roomID int, userID int) e
 		"username", msg.Username,
 		"text", msg.Text,
 	)
-	mu.Lock()
-	defer mu.Unlock()
+	mu.RLock()
+	defer mu.RUnlock()
 	handlersInRoom := roomHandlers[roomID]
 	for onlineHandler := range *handlersInRoom {
 		onlineHandler.sendMessage(msg, userID)
