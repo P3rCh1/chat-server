@@ -20,12 +20,13 @@ func MustLoad() *Config {
 	if err != nil {
 		panic(fmt.Sprintf("failed to read config file: %v", err))
 	}
-	var cfg Config
+	cfg := GetDefault()
 	if err := yaml.Unmarshal(file, &cfg); err != nil {
 		panic(fmt.Sprintf("failed to parse config: %v", err))
 	}
+	fmt.Println(cfg.HTTP.ReadTimeout)
 	if err := cfg.Validate(); err != nil {
 		panic(fmt.Sprintf("invalid config: %v", err))
 	}
-	return &cfg
+	return cfg
 }

@@ -12,5 +12,4 @@ func main() {
 
 //TODO check Redis availability in ws
 //TODO check hack safety in ws
-//TODO add room creator and add handler
 //TODO create default config options
