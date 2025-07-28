@@ -10,8 +10,7 @@ func main() {
 	app.Run(cfg)
 }
 
-//TODO Shutdown wait done in ws
-//TODO check RWMutex and Redis availability in ws
+//TODO check Redis availability in ws
 //TODO check hack safety in ws
 //TODO add room creator and add handler
 //TODO create default config options

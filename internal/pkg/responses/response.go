@@ -1,4 +1,4 @@
-package msg
+package responses
 
 import (
 	"encoding/json"
@@ -13,4 +13,10 @@ func SendJSON(w http.ResponseWriter, status int, data any) error {
 		return fmt.Errorf("json encode error: %w", err)
 	}
 	return nil
+}
+
+func SendOk(w http.ResponseWriter, msg string) {
+	SendJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{msg})
 }

@@ -49,7 +49,7 @@ func MustApplyMigrations(log *slog.Logger, db *sql.DB) {
 
 		CREATE TABLE IF NOT EXISTS rooms (
     		id SERIAL PRIMARY KEY,
-    		name VARCHAR(100) NOT NULL,
+    		name VARCHAR(100) NOT NULL UNIQUE,
     		is_private BOOLEAN DEFAULT false,
     		creator_id INTEGER REFERENCES users(id) NOT NULL,
 			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP

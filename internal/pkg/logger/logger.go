@@ -24,3 +24,14 @@ func New(c *config.LogConfig) *slog.Logger {
 	})
 	return slog.New(handler)
 }
+
+func LogError(log *slog.Logger, op string, err error, another ...any) {
+	atrs := make([]any, len(another)+2)
+	atrs[0] = "error"
+	atrs[1] = err.Error()
+	atrs = append(atrs, another...)
+	log.Error(
+		op,
+		atrs...,
+	)
+}

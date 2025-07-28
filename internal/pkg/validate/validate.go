@@ -11,7 +11,7 @@ func Email(email string) bool {
 	return emailRegexp.MatchString(email)
 }
 
-func Username(username string) bool {
+func Name(username string) bool {
 	if len(username) < 3 || len(username) > 20 {
 		return false
 	}

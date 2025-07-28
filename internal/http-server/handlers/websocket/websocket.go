@@ -1,4 +1,4 @@
-package handlers
+package websocket
 
 import (
 	"context"
@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/P3rCh1/chat-server/internal/models"
-	"github.com/P3rCh1/chat-server/internal/pkg/msg"
+	"github.com/P3rCh1/chat-server/internal/pkg/logger"
+	"github.com/P3rCh1/chat-server/internal/pkg/responses"
 	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 	"github.com/gorilla/websocket"
 )
@@ -31,6 +32,7 @@ type handler struct {
 }
 
 func newHandler(userID int, tools *models.Tools) (*handler, error) {
+	const op = "internal.http-server.handlers.websocket.websocket.newHandler"
 	var h handler
 	h.sendChan = make(chan *models.Message, tools.Cfg.WebSocket.MsgBufSize)
 	h.closeCtx, h.cancel = context.WithCancel(context.Background())
@@ -48,7 +50,7 @@ func newHandler(userID int, tools *models.Tools) (*handler, error) {
 	return &h, nil
 }
 
-func ShutdownWS(ctx context.Context, tools *models.Tools) error {
+func Shutdown(ctx context.Context, tools *models.Tools) error {
 	var grace = true
 	var wg sync.WaitGroup
 	mu.RLock()
@@ -66,7 +68,6 @@ func ShutdownWS(ctx context.Context, tools *models.Tools) error {
 					return
 				}
 			}(h)
-
 		}
 	}
 	mu.RUnlock()
@@ -77,33 +78,26 @@ func ShutdownWS(ctx context.Context, tools *models.Tools) error {
 	return nil
 }
 
-func Websocket(tools *models.Tools) http.HandlerFunc {
+func HandlerFunc(tools *models.Tools) http.HandlerFunc {
+	const op = "internal.http-server.handlers.websocket.websocket.HandlerFunc"
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.URL.Query().Get("token")
 		userID, err := tools.TokenProvider.Verify(token)
 		if err != nil {
-			msg.UserNotFound.Drop(w)
-			tools.Log.Info(
-				"user not found",
-				"token", token,
-			)
+			responses.InvalidToken.Drop(w)
+			tools.Log.Info("invalid token")
 			return
 		}
 		h, err := newHandler(userID, tools)
 		if err != nil {
-			msg.UserNotFound.Drop(w)
-			tools.Log.Error(
-				"user not found",
-				"userID", userID,
-			)
+			responses.ServerError.Drop(w)
+			logger.LogError(tools.Log, op, err, "userID", userID)
 			return
 		}
 		h.conn, err = tools.WSUpgrader.Upgrade(w, r, nil)
 		if err != nil {
-			tools.Log.Info(
-				"upgrade fail",
-				"error", err.Error(),
-			)
+			responses.ServerError.Drop(w)
+			logger.LogError(tools.Log, op, err, "userID", userID)
 			return
 		}
 		tools.Log.Info(
@@ -160,6 +154,7 @@ func (h *handler) setConnOptions() {
 }
 
 func (h *handler) reader() {
+	const op = "internal.http-server.handlers.websocket.websocket.reader"
 	defer h.cancel()
 	h.setConnOptions()
 	for {
@@ -170,10 +165,7 @@ func (h *handler) reader() {
 			var r models.WSRequest
 			if err := h.conn.ReadJSON(&r); err != nil {
 				if websocket.IsUnexpectedCloseError(err) {
-					h.tools.Log.Info(
-						"unexpected close",
-						"userID", h.client.UserID,
-						"error", err)
+					logger.LogError(h.tools.Log, op, err, "userID", h.client.UserID)
 				}
 				return
 			}
@@ -258,9 +250,11 @@ func (h *handler) route(r *models.WSRequest) error {
 }
 
 func (h *handler) broadcastToRoom(msg *models.Message, roomID int, userID int) error {
+	const op = "internal.http-server.handlers.websocket.websocket.broadcastToRoom"
 	err := postgres.NewRepository(h.tools.DB).StoreMsg(msg, roomID, userID)
 	if err != nil {
-		return err
+		logger.LogError(h.tools.Log, op, err)
+		return responses.ServerError
 	}
 	h.tools.Log.Debug(
 		"broadcast",
@@ -292,12 +286,18 @@ func (h *handler) message(msg *models.Message) error {
 }
 
 func (h *handler) join(newRoomID int) error {
+	const op = "internal.http-server.handlers.websocket.websocket.join"
 	if h.client.RoomID == newRoomID {
 		return errors.New("already in room")
 	}
 	h.leave()
-	if err := postgres.NewRepository(h.tools.DB).IsRoomMember(h.client.UserID, newRoomID); err != nil {
-		return err
+	isRoomMember, err := postgres.NewRepository(h.tools.DB).IsRoomMember(h.client.UserID, newRoomID)
+	if err != nil {
+		logger.LogError(h.tools.Log, op, err)
+		return responses.ServerError
+	}
+	if !isRoomMember {
+		return errors.New("user not a member of room")
 	}
 	h.toRoom(newRoomID)
 	msg := &models.Message{

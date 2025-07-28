@@ -8,7 +8,9 @@ import (
 	"syscall"
 
 	"github.com/P3rCh1/chat-server/internal/config"
-	"github.com/P3rCh1/chat-server/internal/http-server/handlers"
+	"github.com/P3rCh1/chat-server/internal/http-server/handlers/rooms"
+	"github.com/P3rCh1/chat-server/internal/http-server/handlers/users"
+	ws "github.com/P3rCh1/chat-server/internal/http-server/handlers/websocket"
 	mw "github.com/P3rCh1/chat-server/internal/http-server/middleware"
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
@@ -31,16 +33,19 @@ func Run(cfg *config.Config) {
 		r.Use(mw.LogRequests(tools.Log))
 		r.Use(mw.LogErrors(tools.Log))
 
-		r.Post("/register", handlers.Register(tools))
-		r.With(middleware.Throttle(5)).Post("/login", handlers.Login(tools))
+		r.Post("/register", users.Register(tools))
+		r.With(middleware.Throttle(5)).Post("/login", users.Login(tools))
 
 		r.Group(func(authRouter chi.Router) {
 			authRouter.Use(mw.Auth(tools.TokenProvider))
-			authRouter.Get("/profile", handlers.Profile(tools))
-			authRouter.Put("/change-name", handlers.ChangeName(tools))
+			authRouter.Get("/profile", users.Profile(tools))
+			authRouter.Put("/change-name", users.ChangeName(tools))
+			authRouter.Put("/create-room", rooms.Create(tools))
+			authRouter.Put("/invite", rooms.Invite(tools))
+			authRouter.Put("/join", rooms.Join(tools))
 		})
 	})
-	r.HandleFunc("/ws", handlers.Websocket(tools))
+	r.HandleFunc("/ws", ws.HandlerFunc(tools))
 	server := &http.Server{
 		Addr:         cfg.HTTP.Host + ":" + cfg.HTTP.Port,
 		Handler:      r,
@@ -67,7 +72,7 @@ func Run(cfg *config.Config) {
 	defer cancel()
 	tools.Log.Info("shutting down server...")
 	grace := true
-	if err := handlers.ShutdownWS(shutdownCtx, tools); err != nil {
+	if err := ws.Shutdown(shutdownCtx, tools); err != nil {
 		tools.Log.Error(
 			"websocket shutdown error",
 			"error", err,

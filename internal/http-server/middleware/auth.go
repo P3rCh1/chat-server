@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/P3rCh1/chat-server/internal/pkg/msg"
+	"github.com/P3rCh1/chat-server/internal/pkg/responses"
 	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
 )
 
@@ -14,7 +14,7 @@ func Auth(jwt tokens.TokenProvider) func(http.Handler) http.Handler {
 			token := r.Header.Get("Authorization")
 			userID, err := jwt.Verify(token)
 			if err != nil {
-				msg.UserNotFound.Drop(w)
+				responses.AuthFail.Drop(w)
 				return
 			}
 			ctx := context.WithValue(r.Context(), "userID", userID)
