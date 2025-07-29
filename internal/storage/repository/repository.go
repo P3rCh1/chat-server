@@ -86,6 +86,15 @@ func (r *Repository) ChangeName(userID int, newName string) error {
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
+	go func() {
+		profile, err := r.Profile(userID)
+		if err == nil {
+			profile.Username = newName
+			r.ProfileCache.Set(profile)
+		} else {
+			r.ProfileCache.Delete(profile.ID)
+		}
+	}()
 	return nil
 }
 

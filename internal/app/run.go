@@ -28,15 +28,13 @@ func Run(cfg *config.Config) {
 		r.Use(middleware.Throttle(cfg.HTTP.RateLimit))
 		r.Use(mw.LogRequests(tools.Log))
 		r.Use(mw.LogErrors(tools.Log))
-
 		r.Post("/register", users.Register(tools))
-		r.With(middleware.Throttle(5)).Post("/login", users.Login(tools))
-
+		r.With(middleware.Throttle(5)).Put("/login", users.Login(tools))
 		r.Group(func(authRouter chi.Router) {
 			authRouter.Use(mw.Auth(tools.TokenProvider))
 			authRouter.Get("/profile", users.Profile(tools))
 			authRouter.Put("/change-name", users.ChangeName(tools))
-			authRouter.Put("/create-room", rooms.Create(tools))
+			authRouter.Post("/create-room", rooms.Create(tools))
 			authRouter.Put("/invite", rooms.Invite(tools))
 			authRouter.Put("/join", rooms.Join(tools))
 		})
