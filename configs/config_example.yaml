@@ -1,0 +1,46 @@
+pkg:
+  system_username: "system"
+  error_username: "error"
+
+http:
+  host: localhost
+  port: "8080"
+  read_timeout: "5s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "20s"
+  rate_limit: 100
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  ttl: 1h
+
+websocket:
+  write_buf_size: 4096
+  read_buf_size: 4096
+  msg_buf_size: 20
+  msg_max_size: 16384 
+  msg_max_length: 2000  
+  write_wait: 10s
+  pong_wait: 60s
+  ping_period: 54s
+  max_failed_pings: 3
+  enable_compression: true
+  check_origin: false
+
+db:
+  host: "localhost"
+  port: 5432
+  user: "chat"
+  password: "pass"
+  name: "chatdb"
+
+jwt:
+  secret: "3a56109ff7acebe22680a9ad2fad15185be84ef589882dfdbb623c229185fcdf"
+  expire: "24h"
+
+log:
+  level: "debug"

@@ -8,11 +8,11 @@ import (
 	"syscall"
 
 	"github.com/P3rCh1/chat-server/internal/config"
-	"github.com/P3rCh1/chat-server/internal/http-server/handlers/rooms"
-	"github.com/P3rCh1/chat-server/internal/http-server/handlers/users"
-	ws "github.com/P3rCh1/chat-server/internal/http-server/handlers/websocket"
-	mw "github.com/P3rCh1/chat-server/internal/http-server/middleware"
 	"github.com/P3rCh1/chat-server/internal/pkg/tools"
+	"github.com/P3rCh1/chat-server/internal/server/handlers/rooms"
+	"github.com/P3rCh1/chat-server/internal/server/handlers/users"
+	ws "github.com/P3rCh1/chat-server/internal/server/handlers/websocket"
+	mw "github.com/P3rCh1/chat-server/internal/server/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
