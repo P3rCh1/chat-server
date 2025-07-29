@@ -9,8 +9,8 @@ import (
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/responses"
+	"github.com/P3rCh1/chat-server/internal/pkg/tools"
 	"github.com/P3rCh1/chat-server/internal/pkg/validate"
-	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,7 +31,7 @@ func ValidateRegister(r *models.RegisterRequest) responses.ErrorHTTP {
 	return nil
 }
 
-func Register(tools *models.Tools) http.HandlerFunc {
+func Register(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.users.auth.Register"
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user models.RegisterRequest
@@ -50,8 +50,7 @@ func Register(tools *models.Tools) http.HandlerFunc {
 			return
 		}
 		user.Password = string(hashedPass)
-		rep := postgres.NewRepository(tools.DB)
-		profile, err := rep.CreateUser(user)
+		profile, err := tools.Repository.CreateUser(user)
 		if err != nil {
 			var pqErr *pq.Error
 			if errors.As(err, &pqErr) && pqErr.Code == "23505" {
@@ -66,7 +65,7 @@ func Register(tools *models.Tools) http.HandlerFunc {
 	}
 }
 
-func Login(tools *models.Tools) http.HandlerFunc {
+func Login(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.users.auth.Login"
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input models.LoginRequest
@@ -81,7 +80,7 @@ func Login(tools *models.Tools) http.HandlerFunc {
 		query := "SELECT id, password_hash FROM users WHERE email = $1"
 		var id int
 		var password string
-		if err := tools.DB.QueryRow(query, input.Email).Scan(&id, &password); err != nil {
+		if err := tools.Repository.DB.QueryRow(query, input.Email).Scan(&id, &password); err != nil {
 			if err == sql.ErrNoRows {
 				responses.UserNotFound.Drop(w)
 			} else {

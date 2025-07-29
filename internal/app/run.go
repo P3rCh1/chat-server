@@ -12,18 +12,14 @@ import (
 	"github.com/P3rCh1/chat-server/internal/http-server/handlers/users"
 	ws "github.com/P3rCh1/chat-server/internal/http-server/handlers/websocket"
 	mw "github.com/P3rCh1/chat-server/internal/http-server/middleware"
-	"github.com/P3rCh1/chat-server/internal/models"
-	"github.com/P3rCh1/chat-server/internal/pkg/logger"
-	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
-	"github.com/P3rCh1/chat-server/internal/storage/postgres"
+	"github.com/P3rCh1/chat-server/internal/pkg/tools"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/gorilla/websocket"
 )
 
 func Run(cfg *config.Config) {
-	tools := mustPrepareTools(cfg)
-	defer tools.DB.Close()
+	tools := tools.MustPrepare(cfg)
+	defer tools.Repository.DB.Close()
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Group(func(r chi.Router) {
@@ -88,45 +84,5 @@ func Run(cfg *config.Config) {
 	}
 	if grace {
 		tools.Log.Info("server stopped gracefully")
-	}
-}
-
-func mustPrepareTools(cfg *config.Config) *models.Tools {
-	log := logger.New(&cfg.Logger)
-	db := postgres.MustOpen(log, &cfg.DB)
-	postgres.MustApplyMigrations(log, db)
-	jwt := tokens.NewJWT(&cfg.JWT)
-	ws := &websocket.Upgrader{
-		WriteBufferSize:   cfg.WebSocket.WriteBufSize,
-		ReadBufferSize:    cfg.WebSocket.ReadBufSize,
-		EnableCompression: cfg.WebSocket.EnableCompression,
-	}
-	if cfg.WebSocket.CheckOrigin {
-		ws.CheckOrigin = func(r *http.Request) bool {
-			origin := r.Header.Get("Origin")
-			for _, allowed := range cfg.WebSocket.AllowedOrigins {
-				if origin == allowed {
-					return true
-				}
-			}
-			return false
-		}
-	} else {
-		ws.CheckOrigin = func(r *http.Request) bool {
-			return true
-		}
-	}
-	repo := postgres.NewRepository(db)
-	pkg := &models.Package{
-		SystemUserID: repo.MustCreateInternalUser(log, cfg.PKG.SystemUsername),
-		ErrorUserID:  repo.MustCreateInternalUser(log, cfg.PKG.ErrorUsername),
-	}
-	return &models.Tools{
-		Log:           log,
-		TokenProvider: jwt,
-		DB:            db,
-		WSUpgrader:    ws,
-		Cfg:           cfg,
-		Pkg:           pkg,
 	}
 }

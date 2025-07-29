@@ -6,18 +6,17 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/responses"
+	"github.com/P3rCh1/chat-server/internal/pkg/tools"
 	"github.com/P3rCh1/chat-server/internal/pkg/validate"
-	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 )
 
-func Profile(tools *models.Tools) http.HandlerFunc {
+func Profile(tools *tools.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "internal.http-server.handlers.users.user.Profile"
 		userID := r.Context().Value("userID").(int)
-		profile, err := postgres.NewRepository(tools.DB).Profile(userID)
+		profile, err := tools.Repository.Profile(userID)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				responses.UserNotFound.Drop(w)
@@ -31,7 +30,7 @@ func Profile(tools *models.Tools) http.HandlerFunc {
 	}
 }
 
-func ChangeName(tools *models.Tools) http.HandlerFunc {
+func ChangeName(tools *tools.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "internal.http-server.handlers.users.user.Profile"
 		id := r.Context().Value("userID").(int)
@@ -50,8 +49,7 @@ func ChangeName(tools *models.Tools) http.HandlerFunc {
 			responses.BadName.Drop(w)
 			return
 		}
-		repo := postgres.NewRepository(tools.DB)
-		curName, err := repo.GetUsername(id)
+		curName, err := tools.Repository.GetUsername(id)
 		if err != nil {
 			responses.ServerError.Drop(w)
 			logger.LogError(tools.Log, op, err)
@@ -61,7 +59,7 @@ func ChangeName(tools *models.Tools) http.HandlerFunc {
 			responses.NewNameMatchesCur.Drop(w)
 			return
 		}
-		err = repo.ChangeName(id, request.NewName)
+		err = tools.Repository.ChangeName(id, request.NewName)
 		if err != nil {
 			respErr := responses.MyErrorHTTP{}
 			if errors.As(err, &respErr) {

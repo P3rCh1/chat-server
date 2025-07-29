@@ -12,4 +12,3 @@ func main() {
 
 //TODO check Redis availability in ws
 //TODO check hack safety in ws
-//TODO create default config options

@@ -12,7 +12,7 @@ import (
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/responses"
-	"github.com/P3rCh1/chat-server/internal/storage/postgres"
+	"github.com/P3rCh1/chat-server/internal/pkg/tools"
 	"github.com/gorilla/websocket"
 )
 
@@ -24,15 +24,14 @@ var (
 type handler struct {
 	client    models.Client
 	conn      *websocket.Conn
-	tools     *models.Tools
+	tools     *tools.Tools
 	sendChan  chan *models.Message
 	closeCtx  context.Context
 	closeDone chan struct{}
 	cancel    context.CancelFunc
 }
 
-func newHandler(userID int, tools *models.Tools) (*handler, error) {
-	const op = "internal.http-server.handlers.websocket.websocket.newHandler"
+func newHandler(userID int, tools *tools.Tools) (*handler, error) {
 	var h handler
 	h.sendChan = make(chan *models.Message, tools.Cfg.WebSocket.MsgBufSize)
 	h.closeCtx, h.cancel = context.WithCancel(context.Background())
@@ -43,14 +42,14 @@ func newHandler(userID int, tools *models.Tools) (*handler, error) {
 		RoomID: 0,
 	}
 	var err error
-	h.client.Username, err = postgres.NewRepository(tools.DB).GetUsername(userID)
+	h.client.Username, err = tools.Repository.GetUsername(userID)
 	if err != nil {
 		return nil, err
 	}
 	return &h, nil
 }
 
-func Shutdown(ctx context.Context, tools *models.Tools) error {
+func Shutdown(ctx context.Context, tools *tools.Tools) error {
 	var grace = true
 	var wg sync.WaitGroup
 	mu.RLock()
@@ -78,7 +77,7 @@ func Shutdown(ctx context.Context, tools *models.Tools) error {
 	return nil
 }
 
-func HandlerFunc(tools *models.Tools) http.HandlerFunc {
+func HandlerFunc(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.websocket.websocket.HandlerFunc"
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.URL.Query().Get("token")
@@ -251,7 +250,7 @@ func (h *handler) route(r *models.WSRequest) error {
 
 func (h *handler) broadcastToRoom(msg *models.Message, roomID int, userID int) error {
 	const op = "internal.http-server.handlers.websocket.websocket.broadcastToRoom"
-	err := postgres.NewRepository(h.tools.DB).StoreMsg(msg, roomID, userID)
+	err := h.tools.Repository.StoreMsg(msg, roomID, userID)
 	if err != nil {
 		logger.LogError(h.tools.Log, op, err)
 		return responses.ServerError
@@ -291,7 +290,7 @@ func (h *handler) join(newRoomID int) error {
 		return errors.New("already in room")
 	}
 	h.leave()
-	isRoomMember, err := postgres.NewRepository(h.tools.DB).IsRoomMember(h.client.UserID, newRoomID)
+	isRoomMember, err := h.tools.Repository.IsRoomMember(h.client.UserID, newRoomID)
 	if err != nil {
 		logger.LogError(h.tools.Log, op, err)
 		return responses.ServerError

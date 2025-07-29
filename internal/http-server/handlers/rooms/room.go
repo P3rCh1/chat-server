@@ -9,12 +9,12 @@ import (
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/responses"
+	"github.com/P3rCh1/chat-server/internal/pkg/tools"
 	"github.com/P3rCh1/chat-server/internal/pkg/validate"
-	"github.com/P3rCh1/chat-server/internal/storage/postgres"
 	"github.com/lib/pq"
 )
 
-func Create(tools *models.Tools) http.HandlerFunc {
+func Create(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.rooms.room.Create"
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Context().Value("userID").(int)
@@ -33,7 +33,7 @@ func Create(tools *models.Tools) http.HandlerFunc {
 			IsPrivate: roomReq.IsPrivate,
 			CreatorID: userID,
 		}
-		err = postgres.NewRepository(tools.DB).CreateRoom(&room)
+		err = tools.Repository.CreateRoom(&room)
 		if err != nil {
 			var pqErr *pq.Error
 			if errors.As(err, &pqErr) {
@@ -50,7 +50,7 @@ func Create(tools *models.Tools) http.HandlerFunc {
 	}
 }
 
-func Join(tools *models.Tools) http.HandlerFunc {
+func Join(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.rooms.room.Create"
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Context().Value("userID").(int)
@@ -62,8 +62,7 @@ func Join(tools *models.Tools) http.HandlerFunc {
 			responses.InvalidData.Drop(w)
 			return
 		}
-		repo := postgres.NewRepository(tools.DB)
-		isPrivate, err := repo.IsPrivate(room.ID)
+		isPrivate, err := tools.Repository.IsPrivate(room.ID)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				responses.RoomNotFound.Drop(w)
@@ -76,14 +75,14 @@ func Join(tools *models.Tools) http.HandlerFunc {
 			responses.RoomIsPrivate.Drop(w)
 			return
 		}
-		if !tryAddToRoom(userID, room.ID, tools, w, op) {
+		if !addToRoom(userID, room.ID, tools, w, op) {
 			return
 		}
 		responses.SendOk(w, "join succeed")
 	}
 }
 
-func Invite(tools *models.Tools) http.HandlerFunc {
+func Invite(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.rooms.room.Invite"
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Context().Value("userID").(int)
@@ -93,8 +92,7 @@ func Invite(tools *models.Tools) http.HandlerFunc {
 			responses.InvalidData.Drop(w)
 			return
 		}
-		repo := postgres.NewRepository(tools.DB)
-		creatorID, err := repo.CreatorID(invite.RoomID)
+		creatorID, err := tools.Repository.CreatorID(invite.RoomID)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				responses.RoomNotFound.Drop(w)
@@ -108,16 +106,15 @@ func Invite(tools *models.Tools) http.HandlerFunc {
 			responses.NoAccessToRoom.Drop(w)
 			return
 		}
-		if !tryAddToRoom(invite.UserID, invite.RoomID, tools, w, op) {
+		if !addToRoom(invite.UserID, invite.RoomID, tools, w, op) {
 			return
 		}
 		responses.SendOk(w, "invite succeed")
 	}
 }
 
-func tryAddToRoom(userID, roomID int, tools *models.Tools, w http.ResponseWriter, op string) bool {
-	repo := postgres.NewRepository(tools.DB)
-	if err := repo.AddToRoom(userID, roomID); err != nil {
+func addToRoom(userID, roomID int, tools *tools.Tools, w http.ResponseWriter, op string) bool {
+	if err := tools.Repository.AddToRoom(userID, roomID); err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) {
 			switch pqErr.Code {
@@ -125,7 +122,7 @@ func tryAddToRoom(userID, roomID int, tools *models.Tools, w http.ResponseWriter
 				responses.AlreadyInRoom.Drop(w)
 				return false
 			case "23503":
-				if _, err := repo.GetUsername(userID); err != nil {
+				if _, err := tools.Repository.GetUsername(userID); err != nil {
 					responses.UserNotFound.Drop(w)
 				} else {
 					responses.RoomNotFound.Drop(w)

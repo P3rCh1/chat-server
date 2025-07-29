@@ -24,7 +24,6 @@ func MustLoad() *Config {
 	if err := yaml.Unmarshal(file, &cfg); err != nil {
 		panic(fmt.Sprintf("failed to parse config: %v", err))
 	}
-	fmt.Println(cfg.HTTP.ReadTimeout)
 	if err := cfg.Validate(); err != nil {
 		panic(fmt.Sprintf("invalid config: %v", err))
 	}

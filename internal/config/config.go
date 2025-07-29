@@ -10,6 +10,7 @@ type Config struct {
 	HTTP      HTTP      `yaml:"http"`
 	WebSocket Websocket `yaml:"websocket"`
 	DB        DB        `yaml:"db"`
+	Redis     Redis     `yaml:"redis"`
 	JWT       JWT       `yaml:"jwt"`
 	Logger    LogConfig `yaml:"log"`
 }
@@ -39,6 +40,16 @@ func GetDefault() *Config {
 			MaxFailedPings:    3,
 			EnableCompression: true,
 			CheckOrigin:       false,
+		},
+		DB: DB{
+			Host: "localhost",
+			Port: 5432,
+		},
+		Redis: Redis{
+			Host: "localhost",
+			Port: 6379,
+			DB:   0,
+			TTL:  time.Hour,
 		},
 		JWT: JWT{
 			Expire: 24 * time.Hour,
@@ -85,6 +96,14 @@ type DB struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Name     string `yaml:"name"`
+}
+
+type Redis struct {
+	Host     string        `yaml:"host"`
+	Port     int           `yaml:"port"`
+	Password string        `yaml:"password"`
+	DB       int           `yaml:"db"`
+	TTL      time.Duration `yaml:"ttl"`
 }
 
 type JWT struct {

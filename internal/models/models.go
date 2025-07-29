@@ -1,23 +1,8 @@
 package models
 
 import (
-	"database/sql"
-	"log/slog"
 	"time"
-
-	"github.com/P3rCh1/chat-server/internal/config"
-	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
-	"github.com/gorilla/websocket"
 )
-
-type Tools struct {
-	DB            *sql.DB
-	TokenProvider tokens.TokenProvider
-	Log           *slog.Logger
-	WSUpgrader    *websocket.Upgrader
-	Cfg           *config.Config
-	Pkg           *Package
-}
 
 type Profile struct {
 	ID        int       `json:"id"`
@@ -43,9 +28,4 @@ type Client struct {
 	UserID   int
 	Username string
 	RoomID   int
-}
-
-type Package struct {
-	SystemUserID int
-	ErrorUserID  int
 }

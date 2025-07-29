@@ -1,4 +1,4 @@
-package postgres
+package repository
 
 import (
 	"database/sql"
@@ -8,14 +8,16 @@ import (
 
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/responses"
+	"github.com/P3rCh1/chat-server/internal/storage/cache"
 )
 
 type Repository struct {
-	db *sql.DB
+	DB           *sql.DB
+	ProfileCache *cache.ProfileCacher
 }
 
-func NewRepository(db *sql.DB) *Repository {
-	return &Repository{db}
+func NewRepository(db *sql.DB, profileCache *cache.ProfileCacher) *Repository {
+	return &Repository{db, profileCache}
 }
 
 func (r *Repository) MustCreateInternalUser(log *slog.Logger, username string) int {
@@ -32,7 +34,7 @@ func (r *Repository) MustCreateInternalUser(log *slog.Logger, username string) i
         LIMIT 1
     `
 	var id int
-	err := r.db.QueryRow(query, username).Scan(&id)
+	err := r.DB.QueryRow(query, username).Scan(&id)
 	if err != nil {
 		log.Error(
 			"internal.storage.postgres.MustCreateInternalUser",
@@ -53,15 +55,18 @@ func (r *Repository) CreateUser(user models.RegisterRequest) (models.Profile, er
 		Username: user.Username,
 		Email:    user.Email,
 	}
-	err := r.db.QueryRow(query, user.Username, user.Email, user.Password).Scan(&profile.ID, &profile.CreatedAt)
+	err := r.DB.QueryRow(query, user.Username, user.Email, user.Password).Scan(&profile.ID, &profile.CreatedAt)
 	if err != nil {
 		err = fmt.Errorf("fail to create user: %w", err)
 	}
+	go func() {
+		r.ProfileCache.Set(&profile)
+	}()
 	return profile, err
 }
 
 func (r *Repository) ChangeName(userID int, newName string) error {
-	tx, err := r.db.Begin()
+	tx, err := r.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to start transaction to change name: %w", err)
 	}
@@ -86,7 +91,7 @@ func (r *Repository) ChangeName(userID int, newName string) error {
 
 func (r *Repository) IsRoomMember(userID int, roomID int) (bool, error) {
 	var isRoomMember bool
-	err := r.db.QueryRow(
+	err := r.DB.QueryRow(
 		`SELECT EXISTS(
             SELECT 1 FROM room_members 
             WHERE user_id = $1 AND room_id = $2
@@ -109,7 +114,7 @@ func (r *Repository) StoreMsg(msg *models.Message, roomID, userID int) error {
         ) VALUES ($1, $2, $3)
 		RETURNING timestamp
     `
-	row := r.db.QueryRow(query, roomID, userID, msg.Text)
+	row := r.DB.QueryRow(query, roomID, userID, msg.Text)
 	err := row.Scan(&msg.Timestamp)
 	if err != nil {
 		return fmt.Errorf("store msg fail: %w", err)
@@ -118,12 +123,15 @@ func (r *Repository) StoreMsg(msg *models.Message, roomID, userID int) error {
 }
 
 func (r *Repository) Profile(userID int) (*models.Profile, error) {
+	if profile, _ := r.ProfileCache.Get(userID); profile != nil {
+		return profile, nil
+	}
 	const query = `
 		SELECT username, email, created_at
 		FROM users
 		WHERE id = $1
 	`
-	row := r.db.QueryRow(query, userID)
+	row := r.DB.QueryRow(query, userID)
 	profile := &models.Profile{
 		ID: userID,
 	}
@@ -131,16 +139,15 @@ func (r *Repository) Profile(userID int) (*models.Profile, error) {
 	if err != nil {
 		err = fmt.Errorf("fail to get profile: %w", err)
 	}
+	go func() {
+		r.ProfileCache.Set(profile)
+	}()
 	return profile, err
 }
 
 func (r *Repository) GetUsername(userID int) (string, error) {
-	var username string
-	err := r.db.QueryRow("SELECT username FROM users WHERE id = $1", userID).Scan(&username)
-	if err != nil {
-		err = fmt.Errorf("fail to get username: %w", err)
-	}
-	return username, err
+	profile, err := r.Profile(userID)
+	return profile.Username, err
 }
 
 func (r *Repository) CreateRoom(room *models.Room) error {
@@ -149,7 +156,7 @@ func (r *Repository) CreateRoom(room *models.Room) error {
 		VALUES ($1, $2, $3)
 		RETURNING id
 	`
-	tx, err := r.db.Begin()
+	tx, err := r.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("failed start transaction: %w", err)
 	}
@@ -173,7 +180,7 @@ func (r *Repository) CreatorID(roomID int) (int, error) {
 		SELECT creator_id FROM rooms WHERE id = $1
 	`
 	var creatorID int
-	err := r.db.QueryRow(query, roomID).Scan(&creatorID)
+	err := r.DB.QueryRow(query, roomID).Scan(&creatorID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to find creator id: %w", err)
 	}
@@ -186,7 +193,7 @@ func (r *Repository) AddToRoom(userID, roomID int) error {
 		VALUES ($1, $2)
 		RETURNING user_id
 	`
-	_, err := r.db.Exec(query, userID, roomID)
+	_, err := r.DB.Exec(query, userID, roomID)
 	if err != nil {
 		return fmt.Errorf("failed add to room: %w", err)
 	}
@@ -198,7 +205,7 @@ func (r *Repository) IsPrivate(roomID int) (bool, error) {
 		SELECT is_private FROM rooms WHERE id = $1
 	`
 	var isPrivate bool
-	err := r.db.QueryRow(query, roomID).Scan(&isPrivate)
+	err := r.DB.QueryRow(query, roomID).Scan(&isPrivate)
 	if err != nil {
 		return false, fmt.Errorf("failed to check room's private status: %w", err)
 	}
