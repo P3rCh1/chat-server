@@ -5,29 +5,45 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/responses"
 	"github.com/P3rCh1/chat-server/internal/pkg/tools"
 	"github.com/P3rCh1/chat-server/internal/pkg/validate"
+	"github.com/go-chi/chi/v5"
 )
 
-func Profile(tools *tools.Tools) http.HandlerFunc {
+func MyProfile(tools *tools.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "internal.http-server.handlers.users.user.Profile"
 		userID := r.Context().Value("userID").(int)
-		profile, err := tools.Repository.Profile(userID)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				responses.UserNotFound.Drop(w)
-			} else {
-				responses.ServerError.Drop(w)
-				logger.LogError(tools.Log, op, err)
-			}
-			return
-		}
-		responses.SendJSON(w, http.StatusOK, profile)
+		profile(userID, tools, w, r)
 	}
+}
+
+func AnotherProfile(tools *tools.Tools) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := strconv.Atoi(chi.URLParam(r, "userID"))
+		if err != nil {
+			responses.InvalidURL.Drop(w)
+		}
+		profile(userID, tools, w, r)
+	}
+}
+
+func profile(userID int, tools *tools.Tools, w http.ResponseWriter, r *http.Request) {
+	const op = "internal.http-server.handlers.users.user.profile"
+	profile, err := tools.Repository.Profile(userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			responses.UserNotFound.Drop(w)
+		} else {
+			responses.ServerError.Drop(w)
+			logger.LogError(tools.Log, op, err)
+		}
+		return
+	}
+	responses.SendJSON(w, http.StatusOK, profile)
 }
 
 func ChangeName(tools *tools.Tools) http.HandlerFunc {

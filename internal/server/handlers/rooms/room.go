@@ -136,3 +136,17 @@ func addToRoom(userID, roomID int, tools *tools.Tools, w http.ResponseWriter, op
 	}
 	return true
 }
+
+func GetUserRooms(tools *tools.Tools) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		const op = "internal.http-server.handlers.rooms.room.GetUsersRooms"
+		userID := r.Context().Value("userID").(int)
+		rooms, err := tools.Repository.GetUserRooms(userID)
+		if err != nil {
+			responses.ServerError.Drop(w)
+			logger.LogError(tools.Log, op, err)
+			return
+		}
+		responses.SendJSON(w, http.StatusOK, rooms)
+	}
+}

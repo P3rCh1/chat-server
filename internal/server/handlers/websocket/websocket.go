@@ -31,8 +31,8 @@ type handler struct {
 	cancel    context.CancelFunc
 }
 
-func newHandler(userID int, tools *tools.Tools) (*handler, error) {
-	var h handler
+func newHandler(userID int, tools *tools.Tools) *handler {
+	h := new(handler)
 	h.sendChan = make(chan *models.Message, tools.Cfg.WebSocket.MsgBufSize)
 	h.closeCtx, h.cancel = context.WithCancel(context.Background())
 	h.closeDone = make(chan struct{})
@@ -41,12 +41,7 @@ func newHandler(userID int, tools *tools.Tools) (*handler, error) {
 		UserID: userID,
 		RoomID: 0,
 	}
-	var err error
-	h.client.Username, err = tools.Repository.GetUsername(userID)
-	if err != nil {
-		return nil, err
-	}
-	return &h, nil
+	return h
 }
 
 func Shutdown(ctx context.Context, tools *tools.Tools) error {
@@ -87,12 +82,7 @@ func HandlerFunc(tools *tools.Tools) http.HandlerFunc {
 			tools.Log.Info("invalid token")
 			return
 		}
-		h, err := newHandler(userID, tools)
-		if err != nil {
-			responses.ServerError.Drop(w)
-			logger.LogError(tools.Log, op, err, "userID", userID)
-			return
-		}
+		h := newHandler(userID, tools)
 		h.conn, err = tools.WSUpgrader.Upgrade(w, r, nil)
 		if err != nil {
 			responses.ServerError.Drop(w)
@@ -175,9 +165,9 @@ func (h *handler) reader() {
 					"error", err.Error(),
 				)
 				h.notify(&models.Message{
-					Username: h.tools.Cfg.PKG.ErrorUsername,
-					Text:     err.Error(),
-				}, h.tools.Pkg.ErrorUserID)
+					UserID: h.tools.PKG.ErrorUserID,
+					Text:   err.Error(),
+				}, h.tools.PKG.ErrorUserID)
 			}
 		}
 	}
@@ -194,10 +184,10 @@ func (h *handler) close() {
 	mu.Unlock()
 	if roomID != 0 {
 		msg := &models.Message{
-			Username: h.tools.Cfg.PKG.SystemUsername,
-			Text:     h.client.Username + " leaved the room",
+			UserID: h.tools.PKG.SystemUserID,
+			Text:   fmt.Sprintf("%d:leaved the room", h.client.UserID),
 		}
-		h.broadcastToRoom(msg, roomID, h.tools.Pkg.SystemUserID)
+		h.broadcastToRoom(msg, roomID, h.tools.PKG.SystemUserID)
 	}
 	close(h.sendChan)
 	h.conn.Close()
@@ -231,8 +221,8 @@ func (h *handler) route(r *models.WSRequest) error {
 	switch r.Type {
 	case "message":
 		msg := models.Message{
-			Username: h.client.Username,
-			Text:     r.Content,
+			UserID: h.client.UserID,
+			Text:   r.Content,
 		}
 		return h.message(&msg)
 	case "join":
@@ -258,7 +248,7 @@ func (h *handler) broadcastToRoom(msg *models.Message, roomID int, userID int) e
 	h.tools.Log.Debug(
 		"broadcast",
 		"roomID", roomID,
-		"username", msg.Username,
+		"userID", msg.UserID,
 		"text", msg.Text,
 	)
 	mu.RLock()
@@ -300,10 +290,10 @@ func (h *handler) join(newRoomID int) error {
 	}
 	h.toRoom(newRoomID)
 	msg := &models.Message{
-		Username: h.tools.Cfg.PKG.SystemUsername,
-		Text:     h.client.Username + " joined the room",
+		UserID: h.tools.PKG.SystemUserID,
+		Text:   fmt.Sprintf("%d:joined the room", h.client.UserID),
 	}
-	h.broadcastToRoom(msg, newRoomID, h.tools.Pkg.SystemUserID)
+	h.broadcastToRoom(msg, newRoomID, h.tools.PKG.SystemUserID)
 	return nil
 }
 
@@ -334,16 +324,15 @@ func (h *handler) leave() error {
 	mu.Unlock()
 	h.toRoom(0)
 	msg := &models.Message{
-		Username: h.tools.Cfg.PKG.SystemUsername,
-		Text:     "you leaved the room",
+		UserID: h.tools.PKG.SystemUserID,
+		Text:   "leave the room",
 	}
-	h.notify(msg, h.tools.Pkg.SystemUserID)
+	h.notify(msg, h.tools.PKG.SystemUserID)
 	msg = &models.Message{
-		Username: h.tools.Cfg.PKG.SystemUsername,
-		Text:     h.client.Username + " leaved the room",
+		UserID: h.tools.PKG.SystemUserID,
+		Text:   fmt.Sprintf("%d:leaved the room", h.client.UserID),
 	}
-	msg.Text = h.client.Username + " leaved the room"
-	h.broadcastToRoom(msg, roomID, h.tools.Pkg.SystemUserID)
+	h.broadcastToRoom(msg, roomID, h.tools.PKG.SystemUserID)
 	return nil
 }
 

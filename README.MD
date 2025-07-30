@@ -65,15 +65,23 @@ curl -X PUT http://localhost:8080/login \
 ```
 
 - Пользователи  
+
 1) GET	/profile  
-Посмотреть профиль  
+Посмотреть свой профиль  
 Пример:
 ```
 curl -X GET http://localhost:8080/profile \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-2) PUT	/change-name  
+2) GET	/profile/{userID}  
+Посмотреть профиль по id 
+Пример:
+```
+curl -X GET http://localhost:8080/profile/1
+```
+
+3) PUT	/change-name  
 Изменить имя пользователя  
 Пример:  
 ```
@@ -100,7 +108,7 @@ curl -X POST http://localhost:8080/create-room \
     }'
 ```
 
-2) PUT	    /join  
+2) PUT /join  
 Присоединиться к комнате  
 Если is_private=false: пользователи могут присоединиться к комнате  
 Пример:
@@ -113,7 +121,7 @@ curl -X PUT http://localhost:8080/join \
     }'
 ```
 
-3) PUT	    /invite  
+3) PUT /invite  
 Пригласить пользователя  
 Создатель может добавлять пользователей в комнаты  
 Пример:
@@ -125,6 +133,14 @@ curl -X PUT http://localhost:8080/invite \
     "room_id": 1,
     "user_id": 1
     }'
+```
+
+4) GET /rooms  
+Получить слайс комнат пользователя  
+Пример:
+```
+curl -X PUT http://localhost:8080/rooms \
+-H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 - Websocket  

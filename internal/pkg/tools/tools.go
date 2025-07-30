@@ -20,7 +20,7 @@ type Tools struct {
 	Log           *slog.Logger
 	WSUpgrader    *websocket.Upgrader
 	Cfg           *config.Config
-	Pkg           *Package
+	PKG           *Package
 }
 
 type Package struct {
@@ -66,6 +66,6 @@ func MustPrepare(cfg *config.Config) *Tools {
 		ProfileCacher: profileCacher,
 		WSUpgrader:    ws,
 		Cfg:           cfg,
-		Pkg:           pkg,
+		PKG:           pkg,
 	}
 }

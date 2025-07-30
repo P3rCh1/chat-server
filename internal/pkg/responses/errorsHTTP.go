@@ -23,6 +23,7 @@ var (
 	NoAccessToRoom          = New(http.StatusForbidden, "only creator can invite to room")
 	AlreadyInRoom           = New(http.StatusConflict, "user is already a member of room")
 	AuthFail                = New(http.StatusUnauthorized, "authorization failed")
+	InvalidURL              = New(http.StatusNotFound, "invalid URL")
 )
 
 type ErrorHTTP interface {

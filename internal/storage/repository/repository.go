@@ -220,3 +220,31 @@ func (r *Repository) IsPrivate(roomID int) (bool, error) {
 	}
 	return isPrivate, nil
 }
+
+func (r *Repository) GetUserRooms(userID int) ([]*models.Room, error) {
+	const query = `
+        SELECT r.id, r.name, r.is_private, r.creator_id
+        FROM rooms r
+        JOIN room_members rm ON r.id = rm.room_id
+        WHERE rm.user_id = $1
+    `
+	rows, err := r.DB.Query(query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user rooms: %w", err)
+	}
+	defer rows.Close()
+	var rooms []*models.Room
+	for rows.Next() {
+		room := new(models.Room)
+		if err := rows.Scan(
+			&room.ID,
+			&room.Name,
+			&room.IsPrivate,
+			&room.CreatorID,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan room: %w", err)
+		}
+		rooms = append(rooms, room)
+	}
+	return rooms, nil
+}

@@ -19,13 +19,12 @@ type Room struct {
 }
 
 type Message struct {
-	Username  string    `json:"username"`
+	UserID    int       `json:"user_id"`
 	Text      string    `json:"text"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
 type Client struct {
-	UserID   int
-	Username string
-	RoomID   int
+	UserID int
+	RoomID int
 }
