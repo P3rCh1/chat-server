@@ -9,6 +9,3 @@ func main() {
 	cfg := config.MustLoad()
 	app.Run(cfg)
 }
-
-//TODO check Redis availability in ws
-//TODO check hack safety in ws

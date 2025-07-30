@@ -24,6 +24,11 @@ func MustLoad() *Config {
 	if err := yaml.Unmarshal(file, &cfg); err != nil {
 		panic(fmt.Sprintf("failed to parse config: %v", err))
 	}
+	cfg.DB.User = os.Getenv("POSTGRES_USER")
+	cfg.DB.Name = os.Getenv("POSTGRES_DB")
+	cfg.DB.Password = os.Getenv("POSTGRES_PASSWORD")
+	cfg.Redis.Password = os.Getenv("REDIS_PASSWORD")
+	cfg.JWT.Secret = os.Getenv("JWT_SECRET")
 	if err := cfg.Validate(); err != nil {
 		panic(fmt.Sprintf("invalid config: %v", err))
 	}

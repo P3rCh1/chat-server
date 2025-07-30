@@ -14,10 +14,26 @@
 ```bash
 git clone https://github.com/P3rCh1/chat-server.git
 cd chat-server
-export CONFIG_PATH=./configs/config_example.yaml ##необходимо изменить файл под систему
-go run cmd/chat-server/main.go
+docker compose up --build -d
 ```
+- Для запуска необходимо объявить следующие переменные окружения:  
+```
+# PostgreSQL
+POSTGRES_USER=chat                      # Пользователь БД
+POSTGRES_PASSWORD=your_strong_pass_1    # Пароль
+POSTGRES_DB=chatdb                      # Название БД
 
+# Redis (если требуется аутентификация)
+REDIS_PASSWORD=your_strong_pass_2
+
+# Путь к конфигурации
+CONFIG_PATH=./configs/config_example.yaml
+
+# JWT
+JWT_SECRET=your_jwt_secret               # Секретный ключ для токенов
+```
+- Так же перед запуском можно настроить configs/config.yaml  
+  
 **API Endpoints**
 
 - Аутентификация
