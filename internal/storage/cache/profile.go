@@ -6,50 +6,49 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/redis/go-redis/v9"
 )
 
-type ProfileCacher struct {
+type StructCacher[T any] struct {
 	Client *redis.Client
 	TTL    time.Duration
 	CTX    context.Context
 	Key    string
 }
 
-func NewProfileCacher(cache *redis.Client, ttl time.Duration, name string) *ProfileCacher {
-	return &ProfileCacher{
+func NewStructCacher[T any](cache *redis.Client, ttl time.Duration, tag string) *StructCacher[T] {
+	return &StructCacher[T]{
 		Client: cache,
 		CTX:    context.Background(),
 		TTL:    ttl,
-		Key:    name + `:%d`,
+		Key:    tag + `:%d`,
 	}
 }
 
-func (c *ProfileCacher) Get(userID int) (*models.Profile, error) {
-	data, err := c.Client.Get(c.CTX, fmt.Sprintf(c.Key, userID)).Bytes()
+func (sc *StructCacher[T]) Get(id int) (*T, error) {
+	data, err := sc.Client.Get(sc.CTX, fmt.Sprintf(sc.Key, id)).Bytes()
 	if err == redis.Nil {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	var profile models.Profile
-	json.Unmarshal(data, &profile)
-	return &profile, nil
+	s := new(T)
+	json.Unmarshal(data, s)
+	return s, nil
 }
 
-func (c *ProfileCacher) Set(profile *models.Profile) error {
-	data, err := json.Marshal(profile)
+func (sc *StructCacher[T]) Set(id int, s *T) error {
+	data, err := json.Marshal(s)
 	if err != nil {
 		return fmt.Errorf("failed to marshal profile: %w", err)
 	}
-	if err := c.Client.Set(c.CTX, fmt.Sprintf(c.Key, profile.ID), data, c.TTL).Err(); err != nil {
+	if err := sc.Client.Set(sc.CTX, fmt.Sprintf(sc.Key, id), data, sc.TTL).Err(); err != nil {
 		return fmt.Errorf("failed to set profile in cache: %w", err)
 	}
 	return nil
 }
 
-func (c *ProfileCacher) Delete(userID int) error {
-	return c.Client.Del(c.CTX, fmt.Sprintf(c.Key, userID)).Err()
+func (sc *StructCacher[T]) Delete(id int) error {
+	return sc.Client.Del(sc.CTX, fmt.Sprintf(sc.Key, id)).Err()
 }

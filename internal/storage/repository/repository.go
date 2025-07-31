@@ -12,12 +12,13 @@ import (
 )
 
 type Repository struct {
-	DB           *sql.DB
-	ProfileCache *cache.ProfileCacher
+	DB         *sql.DB
+	UserCacher *cache.StructCacher[models.Profile]
+	RoomCacher *cache.StructCacher[models.Room]
 }
 
-func NewRepository(db *sql.DB, profileCache *cache.ProfileCacher) *Repository {
-	return &Repository{db, profileCache}
+func NewRepository(db *sql.DB, p *cache.StructCacher[models.Profile], r *cache.StructCacher[models.Room]) *Repository {
+	return &Repository{db, p, r}
 }
 
 func (r *Repository) MustCreateInternalUser(log *slog.Logger, username string) int {
@@ -60,7 +61,7 @@ func (r *Repository) CreateUser(user models.RegisterRequest) (models.Profile, er
 		err = fmt.Errorf("fail to create user: %w", err)
 	}
 	go func() {
-		r.ProfileCache.Set(&profile)
+		r.UserCacher.Set(profile.ID, &profile)
 	}()
 	return profile, err
 }
@@ -90,9 +91,9 @@ func (r *Repository) ChangeName(userID int, newName string) error {
 		profile, err := r.Profile(userID)
 		if err == nil {
 			profile.Username = newName
-			r.ProfileCache.Set(profile)
+			r.UserCacher.Set(profile.ID, profile)
 		} else {
-			r.ProfileCache.Delete(profile.ID)
+			r.UserCacher.Delete(profile.ID)
 		}
 	}()
 	return nil
@@ -132,7 +133,7 @@ func (r *Repository) StoreMsg(msg *models.Message, roomID, userID int) error {
 }
 
 func (r *Repository) Profile(userID int) (*models.Profile, error) {
-	if profile, _ := r.ProfileCache.Get(userID); profile != nil {
+	if profile, _ := r.UserCacher.Get(userID); profile != nil {
 		return profile, nil
 	}
 	const query = `
@@ -149,7 +150,7 @@ func (r *Repository) Profile(userID int) (*models.Profile, error) {
 		err = fmt.Errorf("fail to get profile: %w", err)
 	}
 	go func() {
-		r.ProfileCache.Set(profile)
+		r.UserCacher.Set(profile.ID, profile)
 	}()
 	return profile, err
 }
@@ -242,6 +243,9 @@ func (r *Repository) GetUserRooms(userID int) ([]int, error) {
 }
 
 func (r *Repository) GetRoom(roomID int) (*models.Room, error) {
+	if room, _ := r.RoomCacher.Get(roomID); room != nil {
+		return room, nil
+	}
 	const query = `
         SELECT name, is_private, creator_id, created_at FROM rooms WHERE id = $1
     `
@@ -257,5 +261,8 @@ func (r *Repository) GetRoom(roomID int) (*models.Room, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get room: %w", err)
 	}
+	go func() {
+		r.RoomCacher.Set(room.ID, room)
+	}()
 	return room, nil
 }

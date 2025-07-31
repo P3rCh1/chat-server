@@ -8,6 +8,7 @@
 - gorilla/websocket
 - postgres
 - redis
+- docker
 ```
 
 **Запуск**

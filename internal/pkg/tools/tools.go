@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/P3rCh1/chat-server/internal/config"
+	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/tokens"
 	"github.com/P3rCh1/chat-server/internal/storage/cache"
@@ -15,7 +16,6 @@ import (
 
 type Tools struct {
 	Repository    *repository.Repository
-	ProfileCacher *cache.ProfileCacher
 	TokenProvider tokens.TokenProvider
 	Log           *slog.Logger
 	WSUpgrader    *websocket.Upgrader
@@ -32,7 +32,9 @@ func MustPrepare(cfg *config.Config) *Tools {
 	log := logger.New(&cfg.Logger)
 	db := postgres.MustOpen(log, &cfg.DB)
 	postgres.MustApplyMigrations(log, db)
-	profileCacher := cache.NewProfileCacher(cache.MustCreate(log, &cfg.Redis), cfg.Redis.TTL, "profile")
+	redis := cache.MustCreate(log, &cfg.Redis)
+	userCacher := cache.NewStructCacher[models.Profile](redis, cfg.Redis.TTL, "user")
+	roomCacher := cache.NewStructCacher[models.Room](redis, cfg.Redis.TTL, "room")
 	jwt := tokens.NewJWT(&cfg.JWT)
 	ws := &websocket.Upgrader{
 		WriteBufferSize:   cfg.WebSocket.WriteBufSize,
@@ -54,7 +56,7 @@ func MustPrepare(cfg *config.Config) *Tools {
 			return true
 		}
 	}
-	repo := repository.NewRepository(db, profileCacher)
+	repo := repository.NewRepository(db, userCacher, roomCacher)
 	pkg := &Package{
 		SystemUserID: repo.MustCreateInternalUser(log, cfg.PKG.SystemUsername),
 		ErrorUserID:  repo.MustCreateInternalUser(log, cfg.PKG.ErrorUsername),
@@ -63,7 +65,6 @@ func MustPrepare(cfg *config.Config) *Tools {
 		Log:           log,
 		TokenProvider: jwt,
 		Repository:    repo,
-		ProfileCacher: profileCacher,
 		WSUpgrader:    ws,
 		Cfg:           cfg,
 		PKG:           pkg,
