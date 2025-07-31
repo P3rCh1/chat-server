@@ -41,10 +41,10 @@ func (sc *StructCacher[T]) Get(id int) (*T, error) {
 func (sc *StructCacher[T]) Set(id int, s *T) error {
 	data, err := json.Marshal(s)
 	if err != nil {
-		return fmt.Errorf("failed to marshal profile: %w", err)
+		return fmt.Errorf("failed to marshal struct: %w", err)
 	}
 	if err := sc.Client.Set(sc.CTX, fmt.Sprintf(sc.Key, id), data, sc.TTL).Err(); err != nil {
-		return fmt.Errorf("failed to set profile in cache: %w", err)
+		return fmt.Errorf("failed to set struct in cache: %w", err)
 	}
 	return nil
 }

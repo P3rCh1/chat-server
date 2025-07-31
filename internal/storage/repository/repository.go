@@ -12,13 +12,19 @@ import (
 )
 
 type Repository struct {
-	DB         *sql.DB
-	UserCacher *cache.StructCacher[models.Profile]
-	RoomCacher *cache.StructCacher[models.Room]
+	DB              *sql.DB
+	UserCacher      *cache.StructCacher[models.Profile]
+	RoomCacher      *cache.StructCacher[models.Room]
+	UserRoomsCacher *cache.UserRoomsCacher
 }
 
-func NewRepository(db *sql.DB, p *cache.StructCacher[models.Profile], r *cache.StructCacher[models.Room]) *Repository {
-	return &Repository{db, p, r}
+func NewRepository(
+	db *sql.DB,
+	p *cache.StructCacher[models.Profile],
+	r *cache.StructCacher[models.Room],
+	ur *cache.UserRoomsCacher,
+) *Repository {
+	return &Repository{db, p, r, ur}
 }
 
 func (r *Repository) MustCreateInternalUser(log *slog.Logger, username string) int {
@@ -100,6 +106,9 @@ func (r *Repository) ChangeName(userID int, newName string) error {
 }
 
 func (r *Repository) IsRoomMember(userID int, roomID int) (bool, error) {
+	if isRoomMember, err := r.UserRoomsCacher.IsMember(userID, roomID); err == nil {
+		return isRoomMember, nil
+	}
 	var isRoomMember bool
 	err := r.DB.QueryRow(
 		`SELECT EXISTS(
@@ -223,6 +232,9 @@ func (r *Repository) IsPrivate(roomID int) (bool, error) {
 }
 
 func (r *Repository) GetUserRooms(userID int) ([]int, error) {
+	if rooms, _ := r.UserRoomsCacher.Members(userID); rooms != nil {
+		return rooms, nil
+	}
 	const query = `
         SELECT room_id FROM room_members WHERE user_id = $1
     `
@@ -239,6 +251,9 @@ func (r *Repository) GetUserRooms(userID int) ([]int, error) {
 		}
 		rooms = append(rooms, roomID)
 	}
+	go func() {
+		r.UserRoomsCacher.Add(userID, rooms)
+	}()
 	return rooms, nil
 }
 

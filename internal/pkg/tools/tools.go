@@ -35,6 +35,7 @@ func MustPrepare(cfg *config.Config) *Tools {
 	redis := cache.MustCreate(log, &cfg.Redis)
 	userCacher := cache.NewStructCacher[models.Profile](redis, cfg.Redis.TTL, "user")
 	roomCacher := cache.NewStructCacher[models.Room](redis, cfg.Redis.TTL, "room")
+	userRoomsCacher := cache.NewUserRoomsCacher(redis, cfg.Redis.TTL, "user`s-rooms")
 	jwt := tokens.NewJWT(&cfg.JWT)
 	ws := &websocket.Upgrader{
 		WriteBufferSize:   cfg.WebSocket.WriteBufSize,
@@ -56,7 +57,7 @@ func MustPrepare(cfg *config.Config) *Tools {
 			return true
 		}
 	}
-	repo := repository.NewRepository(db, userCacher, roomCacher)
+	repo := repository.NewRepository(db, userCacher, roomCacher, userRoomsCacher)
 	pkg := &Package{
 		SystemUserID: repo.MustCreateInternalUser(log, cfg.PKG.SystemUsername),
 		ErrorUserID:  repo.MustCreateInternalUser(log, cfg.PKG.ErrorUsername),
