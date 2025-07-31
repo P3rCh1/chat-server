@@ -5,18 +5,21 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/P3rCh1/chat-server/internal/models"
 	"github.com/P3rCh1/chat-server/internal/pkg/logger"
 	"github.com/P3rCh1/chat-server/internal/pkg/responses"
 	"github.com/P3rCh1/chat-server/internal/pkg/tools"
 	"github.com/P3rCh1/chat-server/internal/pkg/validate"
+	"github.com/go-chi/chi/v5"
 	"github.com/lib/pq"
 )
 
 func Create(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.rooms.room.Create"
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		userID := r.Context().Value("userID").(int)
 		var roomReq models.CreateRoomRequest
 		err := json.NewDecoder(r.Body).Decode(&roomReq)
@@ -53,6 +56,7 @@ func Create(tools *tools.Tools) http.HandlerFunc {
 func Join(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.rooms.room.Create"
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		userID := r.Context().Value("userID").(int)
 		var room struct {
 			ID int `json:"room_id"`
@@ -85,6 +89,7 @@ func Join(tools *tools.Tools) http.HandlerFunc {
 func Invite(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.rooms.room.Invite"
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		userID := r.Context().Value("userID").(int)
 		var invite models.InviteRequest
 		err := json.NewDecoder(r.Body).Decode(&invite)
@@ -138,8 +143,9 @@ func addToRoom(userID, roomID int, tools *tools.Tools, w http.ResponseWriter, op
 }
 
 func GetUserRooms(tools *tools.Tools) http.HandlerFunc {
+	const op = "internal.http-server.handlers.rooms.room.GetUsersRooms"
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "internal.http-server.handlers.rooms.room.GetUsersRooms"
+		defer r.Body.Close()
 		userID := r.Context().Value("userID").(int)
 		rooms, err := tools.Repository.GetUserRooms(userID)
 		if err != nil {
@@ -148,5 +154,28 @@ func GetUserRooms(tools *tools.Tools) http.HandlerFunc {
 			return
 		}
 		responses.SendJSON(w, http.StatusOK, rooms)
+	}
+}
+
+func GetRoom(tools *tools.Tools) http.HandlerFunc {
+	const op = "internal.http-server.handlers.rooms.room.GetRoom"
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		roomID, err := strconv.Atoi(chi.URLParam(r, "roomID"))
+		if err != nil {
+			responses.InvalidURL.Drop(w)
+			return
+		}
+		room, err := tools.Repository.GetRoom(roomID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				responses.RoomNotFound.Drop(w)
+			} else {
+				responses.ServerError.Drop(w)
+				logger.LogError(tools.Log, op, err)
+			}
+			return
+		}
+		responses.SendJSON(w, http.StatusOK, room)
 	}
 }

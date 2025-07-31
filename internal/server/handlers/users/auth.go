@@ -34,6 +34,7 @@ func ValidateRegister(r *models.RegisterRequest) responses.ErrorHTTP {
 func Register(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.users.auth.Register"
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		var user models.RegisterRequest
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			responses.InvalidData.Drop(w)
@@ -68,6 +69,7 @@ func Register(tools *tools.Tools) http.HandlerFunc {
 func Login(tools *tools.Tools) http.HandlerFunc {
 	const op = "internal.http-server.handlers.users.auth.Login"
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		var input models.LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			responses.InvalidData.Drop(w)

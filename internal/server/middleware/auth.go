@@ -15,6 +15,7 @@ func Auth(jwt tokens.TokenProvider) func(http.Handler) http.Handler {
 			userID, err := jwt.Verify(token)
 			if err != nil {
 				responses.AuthFail.Drop(w)
+				r.Body.Close()
 				return
 			}
 			ctx := context.WithValue(r.Context(), "userID", userID)

@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
 
 func MustLoad() *Config {
+	godotenv.Load("./.env")
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		panic("CONFIG_PATH environment variable not set")

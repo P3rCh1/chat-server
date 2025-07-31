@@ -12,10 +12,11 @@ type Profile struct {
 }
 
 type Room struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	IsPrivate bool   `json:"is_private"`
-	CreatorID int    `json:"creator_id"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	IsPrivate bool      `json:"is_private"`
+	CreatorID int       `json:"creator_id"`
+	CreatedAt time.Time `json:"created-at"`
 }
 
 type Message struct {

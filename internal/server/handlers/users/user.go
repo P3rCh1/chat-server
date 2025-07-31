@@ -16,6 +16,7 @@ import (
 
 func MyProfile(tools *tools.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		userID := r.Context().Value("userID").(int)
 		profile(userID, tools, w, r)
 	}
@@ -23,6 +24,7 @@ func MyProfile(tools *tools.Tools) http.HandlerFunc {
 
 func AnotherProfile(tools *tools.Tools) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		userID, err := strconv.Atoi(chi.URLParam(r, "userID"))
 		if err != nil {
 			responses.InvalidURL.Drop(w)
@@ -47,8 +49,9 @@ func profile(userID int, tools *tools.Tools, w http.ResponseWriter, r *http.Requ
 }
 
 func ChangeName(tools *tools.Tools) http.HandlerFunc {
+	const op = "internal.http-server.handlers.users.user.Profile"
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "internal.http-server.handlers.users.user.Profile"
+		defer r.Body.Close()
 		id := r.Context().Value("userID").(int)
 		var request struct {
 			NewName string `json:"username"`

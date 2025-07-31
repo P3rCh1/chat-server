@@ -136,11 +136,18 @@ curl -X PUT http://localhost:8080/invite \
 ```
 
 4) GET /rooms  
-Получить слайс комнат пользователя  
+Получить слайс ID комнат пользователя  
 Пример:
 ```
 curl -X PUT http://localhost:8080/rooms \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+4) GET /room/{roomID}  
+Получить информацию о комнате  
+Пример:
+```
+curl -X GET http://localhost:8080/room/1
 ```
 
 - Websocket  
