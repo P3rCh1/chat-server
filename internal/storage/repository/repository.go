@@ -293,7 +293,7 @@ func (r *Repository) GetMsgs(roomID, lastID, limit int) ([]*models.Message, erro
         SELECT id, user_id, text, timestamp
 		FROM messages
 		WHERE room_id = $1 AND id <= $2
-		ORDER BY id DESC LIMIT $3
+		ORDER BY timestamp DESC LIMIT $3
     `
 		rows, err = r.DB.Query(query, roomID, lastID, limit)
 	} else {
@@ -301,7 +301,7 @@ func (r *Repository) GetMsgs(roomID, lastID, limit int) ([]*models.Message, erro
         SELECT id, user_id, text, timestamp
 		FROM messages
 		WHERE room_id = $1
-		ORDER BY id DESC LIMIT $2
+		ORDER BY timestamp DESC LIMIT $2
     `
 		rows, err = r.DB.Query(query, roomID, limit)
 	}

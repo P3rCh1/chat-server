@@ -149,11 +149,23 @@ curl -X PUT http://localhost:8080/rooms \
 Пример:
 ```
 curl -X GET http://localhost:8080/room/1
+```  
+
+- Messages  
+1) GET /messages/{roomID}  
+Получить слайс сообщений отправленных в комнате, отсортированные по времени добавления в обратном порядке
+Eсли last_id = 0, отправляются сообщения начаиная с последнего
+В конфиге get_message_limit настраивает лимит получения сообщений за запрос
+Пример:
+```
+curl -X GET http://localhost:8080/messages/1 \
+-H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+-d '{"last_id":100}'
 ```
 
 - Websocket  
 1) /ws  
-Подключение websocket  
+Подключиться по websocket  
 Пример:
 ```
 wscat -c "ws://localhost:8080/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -169,7 +181,6 @@ wscat -c "ws://localhost:8080/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 Если пользователь уже состоит в комнате - покинет ее и успешно присоединится к новой
 2) "leave" покинуть комнату  
 3) "message" написать сообщение в комнату
-
-- Все сообщения хранятся в базе данных и в дальнейшем возможно добавить к ним доступ  
+ 
 - При присоединени, покидании комнаты, всем ее участникам рассылается сообщение от лица system_username (настраивается в конфиге)  
 - На все ошибочные запросы отправляет ответ error_username (настраивается в конфиге)
