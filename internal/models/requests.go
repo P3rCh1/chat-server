@@ -25,3 +25,7 @@ type InviteRequest struct {
 	UserID int `json:"user_id"`
 	RoomID int `json:"room_id"`
 }
+
+type MsgRequest struct {
+	LastID int `json:"last_id"`
+}

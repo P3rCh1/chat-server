@@ -20,6 +20,7 @@ type Room struct {
 }
 
 type Message struct {
+	ID        int       `json:"id"`
 	UserID    int       `json:"user_id"`
 	Text      string    `json:"text"`
 	Timestamp time.Time `json:"timestamp"`

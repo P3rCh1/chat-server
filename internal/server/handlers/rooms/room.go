@@ -74,6 +74,7 @@ func Join(tools *tools.Tools) http.HandlerFunc {
 				responses.ServerError.Drop(w)
 				logger.LogError(tools.Log, op, err)
 			}
+			return
 		}
 		if isPrivate {
 			responses.RoomIsPrivate.Drop(w)

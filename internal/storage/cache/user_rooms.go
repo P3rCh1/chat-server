@@ -25,7 +25,7 @@ func NewUserRoomsCacher(cache *redis.Client, ttl time.Duration, tag string) *Use
 	}
 }
 
-func (c *UserRoomsCacher) Add(userID int, rooms []int) error {
+func (c *UserRoomsCacher) Add(userID int, rooms ...int) error {
 	key := fmt.Sprintf(c.Key, userID)
 	_, err := c.Client.TxPipelined(c.CTX, func(pipe redis.Pipeliner) error {
 		for _, id := range rooms {
@@ -74,4 +74,10 @@ func (c *UserRoomsCacher) Members(userID int) ([]int, error) {
 		rooms[i] = room
 	}
 	return rooms, nil
+}
+
+func (c *UserRoomsCacher) Exists(userID int) (bool, error) {
+	key := fmt.Sprintf(c.Key, userID)
+	val, err := c.Client.Exists(c.CTX, key).Result()
+	return val == 1, err
 }

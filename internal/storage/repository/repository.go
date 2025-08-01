@@ -216,6 +216,9 @@ func (r *Repository) AddToRoom(userID, roomID int) error {
 	if err != nil {
 		return fmt.Errorf("failed add to room: %w", err)
 	}
+	if exists, _ := r.UserRoomsCacher.Exists(userID); exists {
+		r.UserRoomsCacher.Add(roomID)
+	}
 	return nil
 }
 
@@ -252,7 +255,7 @@ func (r *Repository) GetUserRooms(userID int) ([]int, error) {
 		rooms = append(rooms, roomID)
 	}
 	go func() {
-		r.UserRoomsCacher.Add(userID, rooms)
+		r.UserRoomsCacher.Add(userID, rooms...)
 	}()
 	return rooms, nil
 }
@@ -280,4 +283,39 @@ func (r *Repository) GetRoom(roomID int) (*models.Room, error) {
 		r.RoomCacher.Set(room.ID, room)
 	}()
 	return room, nil
+}
+
+func (r *Repository) GetMsgs(roomID, lastID, limit int) ([]*models.Message, error) {
+	var rows *sql.Rows
+	var err error
+	if lastID != 0 {
+		const query = `
+        SELECT id, user_id, text, timestamp
+		FROM messages
+		WHERE room_id = $1 AND id <= $2
+		ORDER BY id DESC LIMIT $3
+    `
+		rows, err = r.DB.Query(query, roomID, lastID, limit)
+	} else {
+		const query = `
+        SELECT id, user_id, text, timestamp
+		FROM messages
+		WHERE room_id = $1
+		ORDER BY id DESC LIMIT $2
+    `
+		rows, err = r.DB.Query(query, roomID, limit)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get messages: %w", err)
+	}
+	defer rows.Close()
+	msgs := make([]*models.Message, 0, limit)
+	for rows.Next() {
+		msg := &models.Message{}
+		if err := rows.Scan(&msg.ID, &msg.UserID, &msg.Text, &msg.Timestamp); err != nil {
+			return nil, fmt.Errorf("failed to scan msg: %w", err)
+		}
+		msgs = append(msgs, msg)
+	}
+	return msgs, nil
 }

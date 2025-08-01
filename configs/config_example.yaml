@@ -1,6 +1,7 @@
 pkg:
   system_username: "system"
   error_username: "error"
+  get_messages_limit: 50
 
 http:
   host: "0.0.0.0"

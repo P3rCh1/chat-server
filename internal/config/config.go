@@ -18,8 +18,9 @@ type Config struct {
 func GetDefault() *Config {
 	return &Config{
 		PKG: Package{
-			SystemUsername: "system",
-			ErrorUsername:  "error",
+			SystemUsername:   "system",
+			ErrorUsername:    "error",
+			GetMessagesLimit: 50,
 		},
 		HTTP: HTTP{
 			ReadTimeout:     5 * time.Second,
@@ -61,8 +62,9 @@ func GetDefault() *Config {
 }
 
 type Package struct {
-	SystemUsername string `yaml:"system_username"`
-	ErrorUsername  string `yaml:"error_username"`
+	SystemUsername   string `yaml:"system_username"`
+	ErrorUsername    string `yaml:"error_username"`
+	GetMessagesLimit int    `yaml:"get_messages_limit"`
 }
 
 type HTTP struct {

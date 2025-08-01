@@ -9,6 +9,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/internal/config"
 	"github.com/P3rCh1/chat-server/internal/pkg/tools"
+	"github.com/P3rCh1/chat-server/internal/server/handlers/messages"
 	"github.com/P3rCh1/chat-server/internal/server/handlers/rooms"
 	"github.com/P3rCh1/chat-server/internal/server/handlers/users"
 	ws "github.com/P3rCh1/chat-server/internal/server/handlers/websocket"
@@ -41,6 +42,7 @@ func Run(cfg *config.Config) {
 			r.Put("/invite", rooms.Invite(tools))
 			r.Put("/join", rooms.Join(tools))
 			r.Get("/rooms", rooms.GetUserRooms(tools))
+			r.Get("/messages/{roomID}", messages.Get(tools))
 		})
 	})
 	r.HandleFunc("/ws", ws.HandlerFunc(tools))
