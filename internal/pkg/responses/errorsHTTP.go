@@ -24,6 +24,7 @@ var (
 	AlreadyInRoom           = New(http.StatusConflict, "user is already a member of room")
 	AuthFail                = New(http.StatusUnauthorized, "authorization failed")
 	InvalidURL              = New(http.StatusNotFound, "invalid URL")
+	NotRoomMember           = New(http.StatusNotFound, "user not a member of room")
 )
 
 type ErrorHTTP interface {

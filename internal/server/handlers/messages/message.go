@@ -27,14 +27,14 @@ func Get(tools *tools.Tools) http.HandlerFunc {
 			responses.InvalidData.Drop(w)
 			return
 		}
-		hasAccess, err := tools.Repository.IsRoomMember(userID, roomID)
+		isMember, err := tools.Repository.IsRoomMember(userID, roomID)
 		if err != nil {
 			logger.LogError(tools.Log, op, err)
 			responses.ServerError.Drop(w)
 			return
 		}
-		if !hasAccess {
-			responses.NoAccessToRoom.Drop(w)
+		if !isMember {
+			responses.NotRoomMember.Drop(w)
 			return
 		}
 		msgs, err := tools.Repository.GetMsgs(roomID, req.LastID, tools.Cfg.PKG.GetMessagesLimit)

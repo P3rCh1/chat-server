@@ -39,22 +39,21 @@ func Create(tools *tools.Tools) http.HandlerFunc {
 		err = tools.Repository.CreateRoom(&room)
 		if err != nil {
 			var pqErr *pq.Error
-			if errors.As(err, &pqErr) {
-				if pqErr.Code == "23505" {
-					responses.RoomAlreadyExist.Drop(w)
-				} else {
-					responses.ServerError.Drop(w)
-					logger.LogError(tools.Log, op, err)
-				}
-				return
+			errors.As(err, &pqErr)
+			if pqErr.Code == "23505" {
+				responses.RoomAlreadyExist.Drop(w)
+			} else {
+				responses.ServerError.Drop(w)
+				logger.LogError(tools.Log, op, err)
 			}
+			return
 		}
 		responses.SendJSON(w, http.StatusCreated, room)
 	}
 }
 
 func Join(tools *tools.Tools) http.HandlerFunc {
-	const op = "internal.http-server.handlers.rooms.room.Create"
+	const op = "internal.http-server.handlers.rooms.room.Join"
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		userID := r.Context().Value("userID").(int)
