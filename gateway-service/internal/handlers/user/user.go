@@ -16,7 +16,7 @@ func ChangeName(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		var changeNameRequest userpb.ChangeNameRequest
-		changeNameRequest.Id = r.Context().Value("uid").(int32)
+		changeNameRequest.UID = r.Context().Value("uid").(int32)
 		if err := json.NewDecoder(r.Body).Decode(&changeNameRequest); err != nil {
 			http.Error(w, "invalid argument", http.StatusBadRequest)
 			return
@@ -55,7 +55,7 @@ func AnotherProfile(s *gateway.Services) http.HandlerFunc {
 func profile(uid int32, s *gateway.Services, w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), s.Timeouts.User)
 	defer cancel()
-	profile, err := s.User.Profile(ctx, &userpb.ProfileRequest{Id: uid})
+	profile, err := s.User.Profile(ctx, &userpb.ProfileRequest{UID: uid})
 	if err != nil {
 		responses.GatewayGRPCErr(w, s.Log, err)
 		return

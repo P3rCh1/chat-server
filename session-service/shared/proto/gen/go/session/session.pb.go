@@ -67,7 +67,7 @@ func (x *VerifyRequest) GetToken() string {
 
 type VerifyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,16 +102,16 @@ func (*VerifyResponse) Descriptor() ([]byte, []int) {
 	return file_session_session_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *VerifyResponse) GetId() int32 {
+func (x *VerifyResponse) GetUID() int32 {
 	if x != nil {
-		return x.Id
+		return x.UID
 	}
 	return 0
 }
 
 type GenerateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -146,9 +146,9 @@ func (*GenerateRequest) Descriptor() ([]byte, []int) {
 	return file_session_session_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GenerateRequest) GetId() int32 {
+func (x *GenerateRequest) GetUID() int32 {
 	if x != nil {
-		return x.Id
+		return x.UID
 	}
 	return 0
 }
@@ -203,11 +203,11 @@ const file_session_session_proto_rawDesc = "" +
 	"\n" +
 	"\x15session/session.proto\x12\bsesionpb\"%\n" +
 	"\rVerifyRequest\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\" \n" +
-	"\x0eVerifyResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"!\n" +
-	"\x0fGenerateRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"(\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\"\n" +
+	"\x0eVerifyResponse\x12\x10\n" +
+	"\x03UID\x18\x01 \x01(\x05R\x03UID\"#\n" +
+	"\x0fGenerateRequest\x12\x10\n" +
+	"\x03UID\x18\x01 \x01(\x05R\x03UID\"(\n" +
 	"\x10GenerateResponse\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token2\x89\x01\n" +
 	"\aSession\x12;\n" +

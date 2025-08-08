@@ -1,5 +1,5 @@
 port: ":50052"
-log_level: "info"
+log_level: "debug"
 shutdown_timeout: "10s"
 postgres:
   port: "5432"

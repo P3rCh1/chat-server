@@ -20,7 +20,7 @@ func Auth(s *gateway.Services) func(http.Handler) http.Handler {
 				responses.GatewayGRPCErr(w, s.Log, err)
 				return
 			}
-			ctx = context.WithValue(r.Context(), "uid", uid.Id)
+			ctx = context.WithValue(r.Context(), "uid", uid.UID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

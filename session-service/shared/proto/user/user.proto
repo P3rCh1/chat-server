@@ -14,13 +14,13 @@ service User {
 }
 
 message RegisterRequest {
-    string name = 1;
+    string username = 1;
     string email = 2;
     string password = 3;
 }
 
 message RegisterResponse {
-    int32 id = 1;
+    int32 UID = 1;
 }
 
 message LoginRequest {
@@ -33,18 +33,18 @@ message LoginResponse {
 }
 
 message ChangeNameRequest {
-    int32 id = 1;
-    string newName = 2;
+    int32 UID = 1;
+    string new_name= 2;
 }
 
 message ChangeNameResponse {}
 
 message ProfileRequest {
-    int32 id = 1;
+    int32 UID = 1;
 }
 
 message ProfileResponse {
-    int32 id = 1;
+    int32 UID = 1;
     string username = 2;
     string email = 3;
     google.protobuf.Timestamp created_at = 4;

@@ -21,7 +21,7 @@ func SendJSON(w http.ResponseWriter, status int, data any) error {
 
 func GatewayGRPCErr(w http.ResponseWriter, log *slog.Logger, err error) {
 	stat, ok := status.FromError(err)
-	if !ok || stat.Code() == codes.Internal {
+	if !ok || stat.Code() == codes.Internal || stat.Code() == codes.DeadlineExceeded {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 	} else {
 		http.Error(w, stat.Message(), GRPCToHTTP(stat.Code()))

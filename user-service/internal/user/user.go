@@ -78,7 +78,6 @@ func (s *UserService) Register(
 	password string,
 ) (int, error) {
 	const op = "user.Register"
-
 	profile := &models.Profile{
 		Username: username,
 		Email:    email,
@@ -119,7 +118,7 @@ func (s *UserService) Login(
 		}
 	}()
 	resp, err := s.sessionClient.Generate(ctx, &sessionpb.GenerateRequest{
-		Id: int32(profile.ID),
+		UID: int32(profile.ID),
 	})
 	if err != nil {
 		s.log.Error(op, "error", err)

@@ -31,14 +31,14 @@ func (s *serverAPI) Verify(ctx context.Context, r *sessionpb.VerifyRequest) (
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "invalid token")
 	}
-	return &sessionpb.VerifyResponse{Id: int32(id)}, nil
+	return &sessionpb.VerifyResponse{UID: int32(id)}, nil
 }
 
 func (s *serverAPI) Generate(ctx context.Context, r *sessionpb.GenerateRequest) (
 	*sessionpb.GenerateResponse,
 	error,
 ) {
-	token, err := s.session.Generate(ctx, int(r.Id))
+	token, err := s.session.Generate(ctx, int(r.UID))
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate token")
 	}

@@ -31,16 +31,16 @@ func Register(gRPCServer *grpc.Server, user User) {
 }
 
 func (s *ServerAPI) Register(ctx context.Context, r *userpb.RegisterRequest) (*userpb.RegisterResponse, error) {
-	if err := validate.Register(r.Name, r.Email, r.Password); err != nil {
+	if err := validate.Register(r.Username, r.Email, r.Password); err != nil {
 		return nil, err
 	}
-	if id, err := s.user.Register(ctx, r.Name, r.Email, r.Password); err != nil {
+	if id, err := s.user.Register(ctx, r.Username, r.Email, r.Password); err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
 		}
 		return nil, status.Errorf(codes.Internal, "unexpected error: %s", err)
 	} else {
-		return &userpb.RegisterResponse{Id: int32(id)}, nil
+		return &userpb.RegisterResponse{UID: int32(id)}, nil
 	}
 }
 
@@ -62,7 +62,7 @@ func (s *ServerAPI) ChangeName(ctx context.Context, r *userpb.ChangeNameRequest)
 	if !validate.Name(r.NewName) {
 		return nil, status.Error(codes.InvalidArgument, "invalid username")
 	}
-	if err := s.user.ChangeName(ctx, int(r.Id), r.NewName); err != nil {
+	if err := s.user.ChangeName(ctx, int(r.UID), r.NewName); err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
 		}
@@ -72,14 +72,14 @@ func (s *ServerAPI) ChangeName(ctx context.Context, r *userpb.ChangeNameRequest)
 }
 
 func (s *ServerAPI) Profile(ctx context.Context, r *userpb.ProfileRequest) (*userpb.ProfileResponse, error) {
-	if profile, err := s.user.Profile(ctx, int(r.Id)); err != nil {
+	if profile, err := s.user.Profile(ctx, int(r.UID)); err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
 		}
 		return nil, status.Errorf(codes.Internal, "unexpected error: %s", err)
 	} else {
 		return &userpb.ProfileResponse{
-			Id:        r.Id,
+			UID:       r.UID,
 			Username:  profile.Username,
 			Email:     profile.Email,
 			CreatedAt: timestamppb.New(profile.CreatedAt),
