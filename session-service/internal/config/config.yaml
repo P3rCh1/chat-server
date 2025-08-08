@@ -1,0 +1,4 @@
+expire: "24h"
+log_level: "debug"
+port: ":50051"
+shutdown_timeout: 10s

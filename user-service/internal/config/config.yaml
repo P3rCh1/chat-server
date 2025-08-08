@@ -1,0 +1,16 @@
+port: ":50052"
+log_level: "info"
+shutdown_timeout: "10s"
+postgres:
+  port: "5432"
+  host: "postgres"
+  db: "chatdb"
+  user: "user-service"
+  timeout: "5s"
+redis:
+  addr: "redis:6379"
+  db: 0
+  ttl: "24h"
+  timeout: "500ms"
+  prefix: "profile"
+session_addr: "session-service:50051"

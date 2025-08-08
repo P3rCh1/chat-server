@@ -1,0 +1,21 @@
+http:
+  host: "0.0.0.0"
+  port: "8080"
+  read_timeout: "5s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "10s"
+  rate_limit: 100
+
+
+services:
+  session_addr: "session:50051"
+  
+  user_addr: "user:50052"  
+
+  timeouts:
+    session: 100ms
+    user: 500ms
+
+
+log_level: "debug"
