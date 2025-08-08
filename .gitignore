@@ -1,2 +1,2 @@
 .env
-configs/myconfig.yaml
+gen.sh

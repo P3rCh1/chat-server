@@ -5,7 +5,7 @@ postgres:
   port: "5432"
   host: "postgres"
   db: "chatdb"
-  user: "user-service"
+  user: "chat"
   timeout: "5s"
 redis:
   addr: "redis:6379"

@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/config"
-	"github.com/P3rCh1/chat-server/shared/logger"
-	sessionpb "github.com/P3rCh1/chat-server/shared/proto/gen/go/session"
-	userpb "github.com/P3rCh1/chat-server/shared/proto/gen/go/user"
+	"github.com/P3rCh1/chat-server/gateway-service/shared/logger"
+	sessionpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/session"
+	userpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

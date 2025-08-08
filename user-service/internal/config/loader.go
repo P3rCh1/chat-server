@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/P3rCh1/chat-server/shared/config"
+	"github.com/P3rCh1/chat-server/user-service/shared/config"
 )
 
 type Config struct {
@@ -54,7 +54,7 @@ func Default() *Config {
 			Port: "5432",
 			Host: "postgres",
 			DB:   "chatdb",
-			User: "user-service",
+			User: "chat",
 		},
 		Redis: &Redis{
 			Addr:    "redis:6379",

@@ -8,12 +8,12 @@ import (
 	"os"
 	"sync"
 
-	sessionpb "github.com/P3rCh1/chat-server/shared/proto/gen/go/session"
 	"github.com/P3rCh1/chat-server/user-service/internal/config"
 	"github.com/P3rCh1/chat-server/user-service/internal/gRPC/status_error"
 	"github.com/P3rCh1/chat-server/user-service/internal/models"
 	"github.com/P3rCh1/chat-server/user-service/internal/storage/cache"
 	"github.com/P3rCh1/chat-server/user-service/internal/storage/database"
+	sessionpb "github.com/P3rCh1/chat-server/user-service/shared/proto/gen/go/session"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

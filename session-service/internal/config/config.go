@@ -5,14 +5,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/P3rCh1/chat-server/shared/config"
+	"github.com/P3rCh1/chat-server/session/shared/config"
 )
 
 type Config struct {
 	Port            string        `yaml:"port"`
 	Secret          string        `yaml:"secret"`
 	Expire          time.Duration `yaml:"expire"`
-	LogLevel        string        `yaml:"log_level`
+	LogLevel        string        `yaml:"log_level"`
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 }
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
-	userpb "github.com/P3rCh1/chat-server/shared/proto/gen/go/user"
+	userpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/user"
 	"github.com/go-chi/chi/v5"
 )
 

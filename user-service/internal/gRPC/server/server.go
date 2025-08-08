@@ -3,10 +3,10 @@ package server
 import (
 	"context"
 
-	userpb "github.com/P3rCh1/chat-server/shared/proto/gen/go/user"
 	"github.com/P3rCh1/chat-server/user-service/internal/gRPC/status_error"
 	"github.com/P3rCh1/chat-server/user-service/internal/gRPC/validate"
 	"github.com/P3rCh1/chat-server/user-service/internal/models"
+	userpb "github.com/P3rCh1/chat-server/user-service/shared/proto/gen/go/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

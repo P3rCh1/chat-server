@@ -6,7 +6,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
-	sessionpb "github.com/P3rCh1/chat-server/shared/proto/gen/go/session"
+	sessionpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/session"
 )
 
 func Auth(s *gateway.Services) func(http.Handler) http.Handler {

@@ -18,7 +18,11 @@ services:
     environment:
       CONFIG_PATH: ${SESSION_CONFIG_PATH}
       JWT_SECRET: ${JWT_SECRET}
-
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50051 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
   user:
     build: ./user-service
     ports:
@@ -36,6 +40,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50052 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
   postgres:
     image: postgres:latest
@@ -45,6 +54,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./force_password.conf:/docker-entrypoint-initdb.d/force_password.conf
     healthcheck:
       test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c 'SELECT 1'"]
       interval: 5s

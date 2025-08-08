@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/P3rCh1/chat-server/shared/logger"
 	"github.com/P3rCh1/chat-server/user-service/internal/config"
 	"github.com/P3rCh1/chat-server/user-service/internal/gRPC/server"
+	"github.com/P3rCh1/chat-server/user-service/shared/logger"
 )
 
 func main() {

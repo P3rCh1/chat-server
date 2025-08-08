@@ -3,7 +3,7 @@ package grpcserver
 import (
 	"context"
 
-	sessionpb "github.com/P3rCh1/chat-server/shared/proto/gen/go/session"
+	sessionpb "github.com/P3rCh1/chat-server/session/shared/proto/gen/go/session"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

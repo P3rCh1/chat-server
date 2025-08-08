@@ -19,7 +19,7 @@ type Postgres struct {
 func New(cfg *config.Postgres) (*Postgres, error) {
 	info := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
-		cfg.Host, cfg.Port, cfg.DB, cfg.Password,
+		cfg.Host, cfg.Port, cfg.DB, cfg.User, cfg.Password,
 	)
 	db, err := sql.Open("postgres", info)
 	if err != nil {

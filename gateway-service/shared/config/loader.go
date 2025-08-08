@@ -14,7 +14,7 @@ type Config interface {
 }
 
 func MustLoad(cfg Config) {
-	godotenv.Load("./.env")
+	_ = godotenv.Load("./.env")
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
 		configPath = "./config.yaml"
@@ -26,7 +26,7 @@ func MustLoad(cfg Config) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to read config file: %v", err))
 	}
-	if err := yaml.Unmarshal(file, &cfg); err != nil {
+	if err := yaml.Unmarshal(file, cfg); err != nil {
 		panic(fmt.Sprintf("failed to parse config: %v", err))
 	}
 	if err := cfg.Validate(); err != nil {

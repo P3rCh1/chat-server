@@ -5,16 +5,15 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY cmd/ cmd/
-COPY internal/ internal/
+COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /user ./cmd/user
+RUN CGO_ENABLED=0 GOOS=linux go build -o /user ./cmd/user-service
 
 FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /user ./user
-COPY --from=builder /config/config.yaml ./config.yaml
+COPY --from=builder app/config.yaml ./config.yaml
 
 ENTRYPOINT ["/app/user"]
 

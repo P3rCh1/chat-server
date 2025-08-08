@@ -3,8 +3,8 @@ package config
 import (
 	"time"
 
-	"github.com/P3rCh1/chat-server/shared/config"
-	"github.com/P3rCh1/chat-server/shared/logger"
+	"github.com/P3rCh1/chat-server/gateway-service/shared/config"
+	"github.com/P3rCh1/chat-server/gateway-service/shared/logger"
 )
 
 type Config struct {
