@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
@@ -55,7 +56,18 @@ func AnotherProfile(s *gateway.Services) http.HandlerFunc {
 func profile(uid int32, s *gateway.Services, w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), s.Timeouts.User)
 	defer cancel()
-	profile, err := s.User.Profile(ctx, &userpb.ProfileRequest{UID: uid})
+	profileProto, err := s.User.Profile(ctx, &userpb.ProfileRequest{UID: uid})
+	profile := struct {
+		UID       int32     `json:"UID"`
+		Username  string    `json:"username"`
+		Email     string    `json:"email"`
+		CreatedAt time.Time `json:"created_at"`
+	}{
+		UID:       profileProto.UID,
+		Username:  profileProto.Username,
+		Email:     profileProto.Email,
+		CreatedAt: profileProto.CreatedAt.AsTime(),
+	}
 	if err != nil {
 		responses.GatewayGRPCErr(w, s.Log, err)
 		return

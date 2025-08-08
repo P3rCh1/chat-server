@@ -20,13 +20,13 @@ import (
 
 type UserService struct {
 	log           *slog.Logger
-	pq            *database.Postgres
+	psql          *database.Postgres
 	redis         *cache.Cacher
 	sessionClient sessionpb.SessionClient
 	sessionConn   *grpc.ClientConn
 }
 
-func MustNew(log *slog.Logger, cfg *config.Config) *UserService {
+func MustPrepare(log *slog.Logger, cfg *config.Config) *UserService {
 	const op = "user.MustNew"
 	var errPQ, errCache, errListen error
 	user := &UserService{log: log}
@@ -34,7 +34,7 @@ func MustNew(log *slog.Logger, cfg *config.Config) *UserService {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		user.pq, errPQ = database.New(cfg.Postgres)
+		user.psql, errPQ = database.New(cfg.Postgres)
 	}()
 	go func() {
 		defer wg.Done()
@@ -54,8 +54,8 @@ func MustNew(log *slog.Logger, cfg *config.Config) *UserService {
 }
 
 func (s *UserService) CloseNotNil() {
-	if s.pq != nil {
-		s.pq.Close()
+	if s.psql != nil {
+		s.psql.Close()
 	}
 	if s.redis != nil {
 		s.redis.Close()
@@ -66,7 +66,7 @@ func (s *UserService) CloseNotNil() {
 }
 
 func (s *UserService) Close() {
-	s.pq.Close()
+	s.psql.Close()
 	s.redis.Close()
 	s.sessionConn.Close()
 }
@@ -82,7 +82,7 @@ func (s *UserService) Register(
 		Username: username,
 		Email:    email,
 	}
-	err := s.pq.CreateUser(ctx, profile, password)
+	err := s.psql.CreateUser(ctx, profile, password)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return 0, err
@@ -103,8 +103,8 @@ func (s *UserService) Login(
 	ctx context.Context,
 	email, password string,
 ) (string, error) {
-	const op = "user.Login"
-	profile, err := s.pq.Login(ctx, email, password)
+	const op = "user.login"
+	profile, err := s.psql.Login(ctx, email, password)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return "", err
@@ -140,7 +140,7 @@ func (s *UserService) ChangeName(
 	if newName == profile.Username {
 		return status_error.NamesAreSame
 	}
-	err = s.pq.ChangeName(ctx, id, newName)
+	err = s.psql.ChangeName(ctx, id, newName)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return err
@@ -170,7 +170,7 @@ func (s *UserService) Profile(
 	if err != nil {
 		s.log.Error(op, "error", err)
 	}
-	profile, err = s.pq.Profile(ctx, userID)
+	profile, err = s.psql.Profile(ctx, userID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err

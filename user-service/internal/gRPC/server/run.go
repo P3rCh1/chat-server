@@ -11,10 +11,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-func Run(cfg *config.Config, log *slog.Logger) *grpc.Server {
+func Run(cfg *config.Config, log *slog.Logger, user *user.UserService) *grpc.Server {
 	s := grpc.NewServer()
-	user := user.MustNew(log, cfg)
-	defer user.Close()
 	Register(s, user)
 	lis, err := net.Listen("tcp", cfg.Port)
 	if err != nil {

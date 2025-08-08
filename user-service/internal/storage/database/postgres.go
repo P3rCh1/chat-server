@@ -16,6 +16,20 @@ type Postgres struct {
 	db *sql.DB
 }
 
+func migrate(ctx context.Context, db *sql.DB) error {
+	const query = `
+		CREATE TABLE IF NOT EXISTS users (
+			id SERIAL PRIMARY KEY,
+			username VARCHAR(100) NOT NULL UNIQUE,
+			email VARCHAR(100) NOT NULL UNIQUE,
+			password VARCHAR(255) NOT NULL,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		);
+	`
+	_, err := db.ExecContext(ctx, query)
+	return err
+}
+
 func New(cfg *config.Postgres) (*Postgres, error) {
 	info := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
@@ -27,11 +41,15 @@ func New(cfg *config.Postgres) (*Postgres, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
 	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
+	if err := migrate(ctx, db); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("failed to ping postgres: %w", err)
+		return nil, fmt.Errorf("failed to migrate postgres: %w", err)
 	}
 	return &Postgres{db}, nil
+}
+
+func (p *Postgres) Ping() {
+	fmt.Println(p.db.Ping())
 }
 
 func (p *Postgres) Close() error {
@@ -40,7 +58,7 @@ func (p *Postgres) Close() error {
 
 func (p *Postgres) CreateUser(ctx context.Context, profile *models.Profile, password string) error {
 	const query = `
-		INSERT INTO users (username, email, password_hash)
+		INSERT INTO users (username, email, password)
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at
 	`
@@ -61,7 +79,7 @@ func (p *Postgres) CreateUser(ctx context.Context, profile *models.Profile, pass
 
 func (p *Postgres) Login(ctx context.Context, email, password string) (*models.Profile, error) {
 	query := `
-		SELECT id, username, created_at, password_hash
+		SELECT id, username, created_at, password
 	 	FROM users
 	  	WHERE email = $1
 	`

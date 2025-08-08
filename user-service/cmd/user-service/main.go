@@ -8,13 +8,16 @@ import (
 
 	"github.com/P3rCh1/chat-server/user-service/internal/config"
 	"github.com/P3rCh1/chat-server/user-service/internal/gRPC/server"
+	"github.com/P3rCh1/chat-server/user-service/internal/user"
 	"github.com/P3rCh1/chat-server/user-service/shared/logger"
 )
 
 func main() {
 	cfg := config.MustLoad()
 	log := logger.New(cfg.LogLevel)
-	s := server.Run(cfg, log)
+	user := user.MustPrepare(log, cfg)
+	defer user.Close()
+	s := server.Run(cfg, log, user)
 	close := make(chan os.Signal, 1)
 	signal.Notify(close, syscall.SIGINT, syscall.SIGTERM)
 	<-close

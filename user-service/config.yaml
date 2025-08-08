@@ -13,4 +13,4 @@ redis:
   ttl: "24h"
   timeout: "500ms"
   prefix: "profile"
-session_addr: "session-service:50051"
+session_addr: "session:50051"
