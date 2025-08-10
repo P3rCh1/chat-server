@@ -11,6 +11,4 @@ redis:
   addr: "redis:6379"
   db: 0
   ttl: "24h"
-  timeout: "500ms"
-  prefix: "profile"
 session_addr: "session:50051"

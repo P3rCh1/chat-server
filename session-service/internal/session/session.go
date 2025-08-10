@@ -31,7 +31,7 @@ func New(cfg *config.Config, log *slog.Logger) *SessionService {
 
 func (s *SessionService) Generate(ctx context.Context, id int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"uid": id,
+		"UID": id,
 		"exp": time.Now().Add(s.Expire).Unix(),
 	})
 	return token.SignedString(s.Secret)
@@ -47,8 +47,16 @@ func (s *SessionService) Verify(ctx context.Context, tokenString string) (int, e
 		}
 		return 0, ErrInvalidToken
 	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return int(claims["uid"].(float64)), nil
+	if !token.Valid {
+		return 0, ErrInvalidToken
 	}
-	return 0, ErrInvalidToken
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, ErrInvalidToken
+	}
+	uid, ok := claims["UID"].(float64)
+	if !ok {
+		return 0, ErrInvalidToken
+	}
+	return int(uid), nil
 }

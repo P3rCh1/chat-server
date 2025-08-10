@@ -27,12 +27,14 @@ type HTTP struct {
 type Services struct {
 	SessionAddr string           `yaml:"session_addr"`
 	UserAddr    string           `yaml:"user_addr"`
+	RoomsAddr   string           `yaml:"rooms_addr"`
 	Timeouts    TimeoutsServices `yaml:"timeouts"`
 }
 
 type TimeoutsServices struct {
 	Session time.Duration `yaml:"session"`
 	User    time.Duration `yaml:"user"`
+	Rooms   time.Duration `yaml:"rooms"`
 }
 
 func (cfg *Config) Validate() error {

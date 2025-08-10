@@ -25,17 +25,14 @@ func New(cfg *config.Redis) (*Cacher, error) {
 		DB:       cfg.DB,
 		Password: cfg.Password,
 	})
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
-	defer cancel()
-	if err := client.Ping(ctx).Err(); err != nil {
+	if err := client.Ping(context.Background()).Err(); err != nil {
 		client.Close()
 		return nil, err
 	}
 	return &Cacher{
-		client:  client,
-		ttl:     cfg.TTL,
-		timeout: cfg.Timeout,
-		key:     cfg.Prefix + ":%d",
+		client: client,
+		ttl:    cfg.TTL,
+		key:    "profile" + ":%d",
 	}, nil
 }
 
@@ -43,14 +40,12 @@ func (c *Cacher) Close() error {
 	return c.client.Close()
 }
 
-func (c *Cacher) Set(p *models.Profile) error {
+func (c *Cacher) Set(ctx context.Context, p *models.Profile) error {
 	key := fmt.Sprintf(c.key, p.ID)
 	bytes, err := json.Marshal(p)
 	if err != nil {
 		return fmt.Errorf("failed to marshal profile: %w", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
 	err = c.client.Set(ctx, key, bytes, c.ttl).Err()
 	if err != nil {
 		return fmt.Errorf("failed to set profile: %w", err)
@@ -58,10 +53,8 @@ func (c *Cacher) Set(p *models.Profile) error {
 	return nil
 }
 
-func (c *Cacher) Get(id int) (*models.Profile, error) {
+func (c *Cacher) Get(ctx context.Context, id int) (*models.Profile, error) {
 	key := fmt.Sprintf(c.key, id)
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
 	str, err := c.client.Get(ctx, key).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {

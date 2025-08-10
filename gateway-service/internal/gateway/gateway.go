@@ -7,6 +7,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/config"
 	"github.com/P3rCh1/chat-server/gateway-service/shared/logger"
+	roomspb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/rooms"
 	sessionpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/session"
 	userpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/user"
 	"google.golang.org/grpc"
@@ -16,6 +17,7 @@ import (
 type Services struct {
 	Session  sessionpb.SessionClient
 	User     userpb.UserClient
+	Rooms    roomspb.RoomsClient
 	Log      *slog.Logger
 	Timeouts config.TimeoutsServices
 	conns    []*grpc.ClientConn
@@ -28,11 +30,17 @@ func MustNew(cfg *config.Config) *Services {
 	}
 	wg := sync.WaitGroup{}
 	ok := true
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		defer wg.Done()
 		conn := s.AddConn(s.Log, cfg.Services.SessionAddr)
 		s.Session = sessionpb.NewSessionClient(conn)
+		ok = ok && conn != nil
+	}()
+	go func() {
+		defer wg.Done()
+		conn := s.AddConn(s.Log, cfg.Services.RoomsAddr)
+		s.Rooms = roomspb.NewRoomsClient(conn)
 		ok = ok && conn != nil
 	}()
 	go func() {

@@ -44,7 +44,7 @@ func LogInternalErrors(logger *slog.Logger) func(next http.Handler) http.Handler
 			rw := NewResponseWrapper(w)
 			requestID := r.Context().Value(RequestIDKey).(string)
 			next.ServeHTTP(rw, r)
-			if rw.status == http.StatusInternalServerError {
+			if rw.Status() == http.StatusInternalServerError {
 				logger.Info(
 					"HTTP error",
 					slog.String("id", requestID),

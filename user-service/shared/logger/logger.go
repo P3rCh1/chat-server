@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	InfoLVL  = "debug"
-	DebugLVL = "info"
+	DebugLVL = "debug"
+	InfoLVL  = "info"
 	WarnLVL  = "warn"
 	ErrorLVL = "error"
 )

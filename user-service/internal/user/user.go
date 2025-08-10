@@ -91,7 +91,7 @@ func (s *UserService) Register(
 		return 0, fmt.Errorf("create user error: %w", err)
 	}
 	go func() {
-		err := s.redis.Set(profile)
+		err := s.redis.Set(context.Background(), profile)
 		if err != nil {
 			s.log.Error(op, "error", err)
 		}
@@ -103,7 +103,7 @@ func (s *UserService) Login(
 	ctx context.Context,
 	email, password string,
 ) (string, error) {
-	const op = "user.login"
+	const op = "user.Login"
 	profile, err := s.psql.Login(ctx, email, password)
 	if err != nil {
 		if status_error.IsStatusError(err) {
@@ -112,7 +112,7 @@ func (s *UserService) Login(
 		return "", fmt.Errorf("login error: %w", err)
 	}
 	go func() {
-		err := s.redis.Set(profile)
+		err := s.redis.Set(context.Background(), profile)
 		if err != nil {
 			s.log.Error(op, "error", err)
 		}
@@ -150,7 +150,7 @@ func (s *UserService) ChangeName(
 	}
 	go func() {
 		profile.Username = newName
-		err := s.redis.Set(profile)
+		err := s.redis.Set(context.Background(), profile)
 		if err != nil {
 			s.log.Error(op, "error", err)
 		}
@@ -160,17 +160,17 @@ func (s *UserService) ChangeName(
 
 func (s *UserService) Profile(
 	ctx context.Context,
-	userID int,
+	UID int,
 ) (*models.Profile, error) {
 	const op = "user.Profile"
-	profile, err := s.redis.Get(userID)
+	profile, err := s.redis.Get(ctx, UID)
 	if profile != nil {
 		return profile, nil
 	}
 	if err != nil {
 		s.log.Error(op, "error", err)
 	}
-	profile, err = s.psql.Profile(ctx, userID)
+	profile, err = s.psql.Profile(ctx, UID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
@@ -179,7 +179,7 @@ func (s *UserService) Profile(
 		return nil, fmt.Errorf("get profile error: %w", err)
 	}
 	go func() {
-		err := s.redis.Set(profile)
+		err := s.redis.Set(context.Background(), profile)
 		if err != nil {
 			s.log.Error(op, "error", err)
 		}

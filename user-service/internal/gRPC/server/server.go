@@ -22,8 +22,8 @@ type User interface {
 	Register(ctx context.Context, username, email, password string,
 	) (int, error)
 	Login(ctx context.Context, email, password string) (string, error)
-	ChangeName(ctx context.Context, userID int, newName string) error
-	Profile(ctx context.Context, userID int) (*models.Profile, error)
+	ChangeName(ctx context.Context, UID int, newName string) error
+	Profile(ctx context.Context, UID int) (*models.Profile, error)
 }
 
 func Register(gRPCServer *grpc.Server, user User) {
@@ -45,8 +45,8 @@ func (s *ServerAPI) Register(ctx context.Context, r *userpb.RegisterRequest) (*u
 }
 
 func (s *ServerAPI) Login(ctx context.Context, r *userpb.LoginRequest) (*userpb.LoginResponse, error) {
-	if !validate.Email(r.Email) {
-		return nil, status.Error(codes.InvalidArgument, "invalid email")
+	if err := validate.Email(r.Email); err != nil {
+		return nil, err
 	}
 	if token, err := s.user.Login(ctx, r.Email, r.Password); err != nil {
 		if status_error.IsStatusError(err) {
@@ -59,8 +59,8 @@ func (s *ServerAPI) Login(ctx context.Context, r *userpb.LoginRequest) (*userpb.
 }
 
 func (s *ServerAPI) ChangeName(ctx context.Context, r *userpb.ChangeNameRequest) (*userpb.ChangeNameResponse, error) {
-	if !validate.Name(r.NewName) {
-		return nil, status.Error(codes.InvalidArgument, "invalid username")
+	if err := validate.Name(r.NewName); err != nil {
+		return nil, err
 	}
 	if err := s.user.ChangeName(ctx, int(r.UID), r.NewName); err != nil {
 		if status_error.IsStatusError(err) {

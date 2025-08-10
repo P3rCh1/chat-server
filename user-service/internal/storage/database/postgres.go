@@ -48,10 +48,6 @@ func New(cfg *config.Postgres) (*Postgres, error) {
 	return &Postgres{db}, nil
 }
 
-func (p *Postgres) Ping() {
-	fmt.Println(p.db.Ping())
-}
-
 func (p *Postgres) Close() error {
 	return p.db.Close()
 }

@@ -1,0 +1,13 @@
+port: ":50053"
+log_level: "debug"
+shutdown_timeout: "10s"
+postgres:
+  port: "5432"
+  host: "postgres"
+  db: "chatdb"
+  user: "chat"
+  timeout: "5s"
+redis:
+  addr: "redis:6379"
+  db: 0
+  ttl: "24h"

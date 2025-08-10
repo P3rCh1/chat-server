@@ -30,8 +30,6 @@ type Redis struct {
 	Addr     string        `yaml:"addr"`
 	DB       int           `yaml:"db"`
 	TTL      time.Duration `yaml:"ttl"`
-	Timeout  time.Duration `yaml:"timeout"`
-	Prefix   string        `yaml:"prefix"`
 	Password string
 }
 
@@ -57,10 +55,8 @@ func Default() *Config {
 			User: "chat",
 		},
 		Redis: &Redis{
-			Addr:    "redis:6379",
-			TTL:     24 * time.Hour,
-			Timeout: 500 * time.Microsecond,
-			Prefix:  "profile",
+			Addr: "redis:6379",
+			TTL:  24 * time.Hour,
 		},
 	}
 }

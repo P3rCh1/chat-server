@@ -16,7 +16,7 @@ type serverAPI struct {
 
 type Session interface {
 	Verify(ctx context.Context, token string) (int, error)
-	Generate(ctx context.Context, userID int) (string, error)
+	Generate(ctx context.Context, UID int) (string, error)
 }
 
 func Register(gRPCServer *grpc.Server, session Session) {

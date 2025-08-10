@@ -75,7 +75,7 @@ curl -X GET http://localhost:8080/profile \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-2) GET	/profile/{userID}  
+2) GET	/profile/{UID}  
 Посмотреть профиль по id 
 Пример:
 ```

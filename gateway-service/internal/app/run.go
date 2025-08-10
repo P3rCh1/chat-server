@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -9,7 +10,8 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/config"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
-	handlers "github.com/P3rCh1/chat-server/gateway-service/internal/handlers/user"
+	"github.com/P3rCh1/chat-server/gateway-service/internal/handlers/rooms"
+	"github.com/P3rCh1/chat-server/gateway-service/internal/handlers/user"
 	mw "github.com/P3rCh1/chat-server/gateway-service/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -26,18 +28,18 @@ func Run(cfg *config.Config) {
 		r.Use(mw.Secure)
 		r.Use(middleware.Throttle(cfg.HTTP.RateLimit))
 		r.Use(mw.LogRequests(services.Log))
-		r.Post("/register", handlers.Register(services))
-		r.Get("/profile/{userID}", handlers.AnotherProfile(services))
-		//r.Get("/room/{roomID}", handlers.GetRoom(services))
-		r.With(middleware.Throttle(5)).Put("/login", handlers.Login(services))
+		r.Post("/register", user.Register(services))
+		r.Get(fmt.Sprintf("/profile/{%s}", user.URLParam), user.AnotherProfile(services))
+		r.Get(fmt.Sprintf("/room/{%s}", rooms.URLParam), rooms.Get(services))
+		r.With(middleware.Throttle(5)).Put("/login", user.Login(services))
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth(services))
-			r.Get("/profile", handlers.MyProfile(services))
-			r.Put("/change-name", handlers.ChangeName(services))
-			//r.Post("/create-room", handlers.Create(services))
-			// r.Put("/invite", handlers.Invite(services))
-			// r.Put("/join", handlers.Join(services))
-			// r.Get("/rooms", handlers.GetUserRooms(services))
+			r.Get("/profile", user.MyProfile(services))
+			r.Put("/change-name", user.ChangeName(services))
+			r.Post("/create-room", rooms.Create(services))
+			r.Put("/invite", rooms.Invite(services))
+			r.Put("/join", rooms.Join(services))
+			r.Get("/rooms", rooms.UserIn(services))
 			// r.Get("/messages/{roomID}", handlers.Get(services))
 		})
 	})

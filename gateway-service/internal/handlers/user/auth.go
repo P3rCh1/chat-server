@@ -1,4 +1,4 @@
-package handlers
+package user
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 
 func Register(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
 		var user userpb.RegisterRequest
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			http.Error(w, "invalid argument", http.StatusBadRequest)
@@ -22,7 +21,7 @@ func Register(s *gateway.Services) http.HandlerFunc {
 		defer cancel()
 		id, err := s.User.Register(ctx, &user)
 		if err != nil {
-			responses.GatewayGRPCErr(w, s.Log, err)
+			responses.GatewayGRPCErr(w, s.Log, "user", err)
 			return
 		}
 		responses.SendJSON(w, http.StatusCreated, id)
@@ -31,7 +30,6 @@ func Register(s *gateway.Services) http.HandlerFunc {
 
 func Login(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
 		var loginRequest userpb.LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
 			http.Error(w, "invalid argument", http.StatusBadRequest)
@@ -41,7 +39,7 @@ func Login(s *gateway.Services) http.HandlerFunc {
 		defer cancel()
 		token, err := s.User.Login(ctx, &loginRequest)
 		if err != nil {
-			responses.GatewayGRPCErr(w, s.Log, err)
+			responses.GatewayGRPCErr(w, s.Log, "user", err)
 			return
 		}
 		responses.SendJSON(w, http.StatusOK, token)

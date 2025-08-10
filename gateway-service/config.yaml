@@ -10,12 +10,12 @@ http:
 
 services:
   session_addr: "session:50051"
-  
   user_addr: "user:50052"  
+  rooms_addr: "rooms:50053"  
 
   timeouts:
     session: 3s
     user: 5s
-
+    rooms: 4s
 
 log_level: "debug"
