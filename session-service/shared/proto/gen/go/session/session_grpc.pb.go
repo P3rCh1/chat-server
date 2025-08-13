@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Session_Verify_FullMethodName   = "/sesionpb.Session/Verify"
 	Session_Generate_FullMethodName = "/sesionpb.Session/Generate"
+	Session_Ping_FullMethodName     = "/sesionpb.Session/Ping"
 )
 
 // SessionClient is the client API for Session service.
@@ -29,6 +30,7 @@ const (
 type SessionClient interface {
 	Verify(ctx context.Context, in *VerifyRequest, opts ...grpc.CallOption) (*VerifyResponse, error)
 	Generate(ctx context.Context, in *GenerateRequest, opts ...grpc.CallOption) (*GenerateResponse, error)
+	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type sessionClient struct {
@@ -59,12 +61,23 @@ func (c *sessionClient) Generate(ctx context.Context, in *GenerateRequest, opts 
 	return out, nil
 }
 
+func (c *sessionClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, Session_Ping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SessionServer is the server API for Session service.
 // All implementations must embed UnimplementedSessionServer
 // for forward compatibility.
 type SessionServer interface {
 	Verify(context.Context, *VerifyRequest) (*VerifyResponse, error)
 	Generate(context.Context, *GenerateRequest) (*GenerateResponse, error)
+	Ping(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedSessionServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedSessionServer) Verify(context.Context, *VerifyRequest) (*Veri
 }
 func (UnimplementedSessionServer) Generate(context.Context, *GenerateRequest) (*GenerateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Generate not implemented")
+}
+func (UnimplementedSessionServer) Ping(context.Context, *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (UnimplementedSessionServer) mustEmbedUnimplementedSessionServer() {}
 func (UnimplementedSessionServer) testEmbeddedByValue()                 {}
@@ -138,6 +154,24 @@ func _Session_Generate_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Session_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Session_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionServer).Ping(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Session_ServiceDesc is the grpc.ServiceDesc for Session service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var Session_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Generate",
 			Handler:    _Session_Generate_Handler,
+		},
+		{
+			MethodName: "Ping",
+			Handler:    _Session_Ping_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

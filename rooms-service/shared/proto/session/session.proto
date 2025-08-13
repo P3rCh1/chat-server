@@ -14,11 +14,11 @@ message VerifyRequest {
 }
 
 message VerifyResponse {
-    int32 UID = 1;
+    int64 UID = 1;
 }
 
 message GenerateRequest {
-    int32 UID = 1;
+    int64 UID = 1;
 }
 
 message GenerateResponse {

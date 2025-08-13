@@ -17,12 +17,12 @@ func Auth(s *gateway.Services) func(http.Handler) http.Handler {
 			token := r.Header.Get("Authorization")
 			ctx, cancel := context.WithTimeout(r.Context(), s.Timeouts.Session)
 			defer cancel()
-			UID, err := s.Session.Verify(ctx, &sessionpb.VerifyRequest{Token: token})
+			uid, err := s.Session.Verify(ctx, &sessionpb.VerifyRequest{Token: token})
 			if err != nil {
 				responses.GatewayGRPCErr(w, s.Log, "auth", err)
 				return
 			}
-			ctx = context.WithValue(r.Context(), UIDContextKey, UID.UID)
+			ctx = context.WithValue(r.Context(), UIDContextKey, uid.UID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

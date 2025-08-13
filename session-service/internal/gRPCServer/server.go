@@ -15,8 +15,9 @@ type serverAPI struct {
 }
 
 type Session interface {
-	Verify(ctx context.Context, token string) (int, error)
-	Generate(ctx context.Context, UID int) (string, error)
+	Verify(ctx context.Context, token string) (int64, error)
+	Generate(ctx context.Context, uid int64) (string, error)
+	Ping(ctx context.Context)
 }
 
 func Register(gRPCServer *grpc.Server, session Session) {
@@ -31,16 +32,21 @@ func (s *serverAPI) Verify(ctx context.Context, r *sessionpb.VerifyRequest) (
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "invalid token")
 	}
-	return &sessionpb.VerifyResponse{UID: int32(id)}, nil
+	return &sessionpb.VerifyResponse{UID: id}, nil
 }
 
 func (s *serverAPI) Generate(ctx context.Context, r *sessionpb.GenerateRequest) (
 	*sessionpb.GenerateResponse,
 	error,
 ) {
-	token, err := s.session.Generate(ctx, int(r.UID))
+	token, err := s.session.Generate(ctx, r.UID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate token")
 	}
 	return &sessionpb.GenerateResponse{Token: token}, nil
+}
+
+func (s *serverAPI) Ping(ctx context.Context, r *sessionpb.Empty) (*sessionpb.Empty, error) {
+	s.session.Ping(ctx)
+	return &sessionpb.Empty{}, nil
 }

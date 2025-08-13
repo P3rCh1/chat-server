@@ -17,11 +17,10 @@ type Config struct {
 }
 
 type Postgres struct {
-	Port     string        `yaml:"port"`
-	Host     string        `yaml:"host"`
-	DB       string        `yaml:"db"`
-	User     string        `yaml:"user"`
-	Timeout  time.Duration `yaml:"timeout"`
+	Port     string `yaml:"port"`
+	Host     string `yaml:"host"`
+	DB       string `yaml:"db"`
+	User     string `yaml:"user"`
 	Password string
 }
 
@@ -45,7 +44,7 @@ func (cfg *Config) Validate() error {
 func Default() *Config {
 	return &Config{
 		LogLevel:        "info",
-		Port:            ":50052",
+		Port:            ":50053",
 		ShutdownTimeout: 10 * time.Second,
 		Postgres: &Postgres{
 			Port: "5432",

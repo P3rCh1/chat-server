@@ -24,9 +24,9 @@ const (
 
 type InviteRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CreatorUID    int32                  `protobuf:"varint,1,opt,name=CreatorUID,proto3" json:"CreatorUID,omitempty"`
-	UID           int32                  `protobuf:"varint,2,opt,name=UID,proto3" json:"UID,omitempty"`
-	RoomID        int32                  `protobuf:"varint,3,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
+	CreatorUID    int64                  `protobuf:"varint,1,opt,name=CreatorUID,proto3" json:"CreatorUID,omitempty"`
+	UID           int64                  `protobuf:"varint,2,opt,name=UID,proto3" json:"UID,omitempty"`
+	RoomID        int64                  `protobuf:"varint,3,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -61,21 +61,21 @@ func (*InviteRequest) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *InviteRequest) GetCreatorUID() int32 {
+func (x *InviteRequest) GetCreatorUID() int64 {
 	if x != nil {
 		return x.CreatorUID
 	}
 	return 0
 }
 
-func (x *InviteRequest) GetUID() int32 {
+func (x *InviteRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
 	return 0
 }
 
-func (x *InviteRequest) GetRoomID() int32 {
+func (x *InviteRequest) GetRoomID() int64 {
 	if x != nil {
 		return x.RoomID
 	}
@@ -120,8 +120,8 @@ func (*InviteResponse) Descriptor() ([]byte, []int) {
 
 type JoinRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,2,opt,name=UID,proto3" json:"UID,omitempty"`
-	RoomID        int32                  `protobuf:"varint,3,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
+	UID           int64                  `protobuf:"varint,2,opt,name=UID,proto3" json:"UID,omitempty"`
+	RoomID        int64                  `protobuf:"varint,3,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -156,14 +156,14 @@ func (*JoinRequest) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *JoinRequest) GetUID() int32 {
+func (x *JoinRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
 	return 0
 }
 
-func (x *JoinRequest) GetRoomID() int32 {
+func (x *JoinRequest) GetRoomID() int64 {
 	if x != nil {
 		return x.RoomID
 	}
@@ -209,7 +209,7 @@ func (*JoinResponse) Descriptor() ([]byte, []int) {
 type CreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=Name,proto3" json:"Name,omitempty"`
-	UID           int32                  `protobuf:"varint,2,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,2,opt,name=UID,proto3" json:"UID,omitempty"`
 	IsPrivate     bool                   `protobuf:"varint,3,opt,name=IsPrivate,proto3" json:"IsPrivate,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -252,7 +252,7 @@ func (x *CreateRequest) GetName() string {
 	return ""
 }
 
-func (x *CreateRequest) GetUID() int32 {
+func (x *CreateRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -268,7 +268,7 @@ func (x *CreateRequest) GetIsPrivate() bool {
 
 type CreateResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RoomID        int32                  `protobuf:"varint,1,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
+	RoomID        int64                  `protobuf:"varint,1,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -303,7 +303,7 @@ func (*CreateResponse) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *CreateResponse) GetRoomID() int32 {
+func (x *CreateResponse) GetRoomID() int64 {
 	if x != nil {
 		return x.RoomID
 	}
@@ -312,7 +312,7 @@ func (x *CreateResponse) GetRoomID() int32 {
 
 type GetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RoomID        int32                  `protobuf:"varint,1,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
+	RoomID        int64                  `protobuf:"varint,1,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -347,7 +347,7 @@ func (*GetRequest) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetRequest) GetRoomID() int32 {
+func (x *GetRequest) GetRoomID() int64 {
 	if x != nil {
 		return x.RoomID
 	}
@@ -356,9 +356,9 @@ func (x *GetRequest) GetRoomID() int32 {
 
 type GetResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RoomID        int32                  `protobuf:"varint,1,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
+	RoomID        int64                  `protobuf:"varint,1,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
-	CreatorUID    int32                  `protobuf:"varint,3,opt,name=CreatorUID,proto3" json:"CreatorUID,omitempty"`
+	CreatorUID    int64                  `protobuf:"varint,3,opt,name=CreatorUID,proto3" json:"CreatorUID,omitempty"`
 	IsPrivate     bool                   `protobuf:"varint,4,opt,name=IsPrivate,proto3" json:"IsPrivate,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -395,7 +395,7 @@ func (*GetResponse) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *GetResponse) GetRoomID() int32 {
+func (x *GetResponse) GetRoomID() int64 {
 	if x != nil {
 		return x.RoomID
 	}
@@ -409,7 +409,7 @@ func (x *GetResponse) GetName() string {
 	return ""
 }
 
-func (x *GetResponse) GetCreatorUID() int32 {
+func (x *GetResponse) GetCreatorUID() int64 {
 	if x != nil {
 		return x.CreatorUID
 	}
@@ -432,7 +432,7 @@ func (x *GetResponse) GetCreatedAt() *timestamppb.Timestamp {
 
 type UserInRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -467,7 +467,7 @@ func (*UserInRequest) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *UserInRequest) GetUID() int32 {
+func (x *UserInRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -476,7 +476,7 @@ func (x *UserInRequest) GetUID() int32 {
 
 type UserInResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	IDs           []int32                `protobuf:"varint,1,rep,packed,name=IDs,proto3" json:"IDs,omitempty"`
+	IDs           []int64                `protobuf:"varint,1,rep,packed,name=IDs,proto3" json:"IDs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -511,7 +511,7 @@ func (*UserInResponse) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *UserInResponse) GetIDs() []int32 {
+func (x *UserInResponse) GetIDs() []int64 {
 	if x != nil {
 		return x.IDs
 	}
@@ -520,8 +520,8 @@ func (x *UserInResponse) GetIDs() []int32 {
 
 type IsMemberRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
-	RoomID        int32                  `protobuf:"varint,2,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	RoomID        int64                  `protobuf:"varint,2,opt,name=RoomID,proto3" json:"RoomID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -556,14 +556,14 @@ func (*IsMemberRequest) Descriptor() ([]byte, []int) {
 	return file_rooms_rooms_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *IsMemberRequest) GetUID() int32 {
+func (x *IsMemberRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
 	return 0
 }
 
-func (x *IsMemberRequest) GetRoomID() int32 {
+func (x *IsMemberRequest) GetRoomID() int64 {
 	if x != nil {
 		return x.RoomID
 	}
@@ -614,6 +614,42 @@ func (x *IsMemberResponse) GetIsMember() bool {
 	return false
 }
 
+type Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	mi := &file_rooms_rooms_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_rooms_rooms_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_rooms_rooms_proto_rawDescGZIP(), []int{12}
+}
+
 var File_rooms_rooms_proto protoreflect.FileDescriptor
 
 const file_rooms_rooms_proto_rawDesc = "" +
@@ -621,48 +657,50 @@ const file_rooms_rooms_proto_rawDesc = "" +
 	"\x11rooms/rooms.proto\x12\aroomspb\x1a\x1fgoogle/protobuf/timestamp.proto\"Y\n" +
 	"\rInviteRequest\x12\x1e\n" +
 	"\n" +
-	"CreatorUID\x18\x01 \x01(\x05R\n" +
+	"CreatorUID\x18\x01 \x01(\x03R\n" +
 	"CreatorUID\x12\x10\n" +
-	"\x03UID\x18\x02 \x01(\x05R\x03UID\x12\x16\n" +
-	"\x06RoomID\x18\x03 \x01(\x05R\x06RoomID\"\x10\n" +
+	"\x03UID\x18\x02 \x01(\x03R\x03UID\x12\x16\n" +
+	"\x06RoomID\x18\x03 \x01(\x03R\x06RoomID\"\x10\n" +
 	"\x0eInviteResponse\"7\n" +
 	"\vJoinRequest\x12\x10\n" +
-	"\x03UID\x18\x02 \x01(\x05R\x03UID\x12\x16\n" +
-	"\x06RoomID\x18\x03 \x01(\x05R\x06RoomID\"\x0e\n" +
+	"\x03UID\x18\x02 \x01(\x03R\x03UID\x12\x16\n" +
+	"\x06RoomID\x18\x03 \x01(\x03R\x06RoomID\"\x0e\n" +
 	"\fJoinResponse\"S\n" +
 	"\rCreateRequest\x12\x12\n" +
 	"\x04Name\x18\x01 \x01(\tR\x04Name\x12\x10\n" +
-	"\x03UID\x18\x02 \x01(\x05R\x03UID\x12\x1c\n" +
+	"\x03UID\x18\x02 \x01(\x03R\x03UID\x12\x1c\n" +
 	"\tIsPrivate\x18\x03 \x01(\bR\tIsPrivate\"(\n" +
 	"\x0eCreateResponse\x12\x16\n" +
-	"\x06RoomID\x18\x01 \x01(\x05R\x06RoomID\"$\n" +
+	"\x06RoomID\x18\x01 \x01(\x03R\x06RoomID\"$\n" +
 	"\n" +
 	"GetRequest\x12\x16\n" +
-	"\x06RoomID\x18\x01 \x01(\x05R\x06RoomID\"\xb1\x01\n" +
+	"\x06RoomID\x18\x01 \x01(\x03R\x06RoomID\"\xb1\x01\n" +
 	"\vGetResponse\x12\x16\n" +
-	"\x06RoomID\x18\x01 \x01(\x05R\x06RoomID\x12\x12\n" +
+	"\x06RoomID\x18\x01 \x01(\x03R\x06RoomID\x12\x12\n" +
 	"\x04Name\x18\x02 \x01(\tR\x04Name\x12\x1e\n" +
 	"\n" +
-	"CreatorUID\x18\x03 \x01(\x05R\n" +
+	"CreatorUID\x18\x03 \x01(\x03R\n" +
 	"CreatorUID\x12\x1c\n" +
 	"\tIsPrivate\x18\x04 \x01(\bR\tIsPrivate\x128\n" +
 	"\tCreatedAt\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tCreatedAt\"!\n" +
 	"\rUserInRequest\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\"\"\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"\"\n" +
 	"\x0eUserInResponse\x12\x10\n" +
-	"\x03IDs\x18\x01 \x03(\x05R\x03IDs\";\n" +
+	"\x03IDs\x18\x01 \x03(\x03R\x03IDs\";\n" +
 	"\x0fIsMemberRequest\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\x12\x16\n" +
-	"\x06RoomID\x18\x02 \x01(\x05R\x06RoomID\".\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\x12\x16\n" +
+	"\x06RoomID\x18\x02 \x01(\x03R\x06RoomID\".\n" +
 	"\x10IsMemberResponse\x12\x1a\n" +
-	"\bIsMember\x18\x01 \x01(\bR\bIsMember2\xe0\x02\n" +
+	"\bIsMember\x18\x01 \x01(\bR\bIsMember\"\a\n" +
+	"\x05Empty2\x88\x03\n" +
 	"\x05rooms\x129\n" +
 	"\x06Invite\x12\x16.roomspb.InviteRequest\x1a\x17.roomspb.InviteResponse\x123\n" +
 	"\x04Join\x12\x14.roomspb.JoinRequest\x1a\x15.roomspb.JoinResponse\x129\n" +
 	"\x06Create\x12\x16.roomspb.CreateRequest\x1a\x17.roomspb.CreateResponse\x120\n" +
 	"\x03Get\x12\x13.roomspb.GetRequest\x1a\x14.roomspb.GetResponse\x129\n" +
 	"\x06UserIn\x12\x16.roomspb.UserInRequest\x1a\x17.roomspb.UserInResponse\x12?\n" +
-	"\bIsMember\x12\x18.roomspb.IsMemberRequest\x1a\x19.roomspb.IsMemberResponseB-Z+github.com/P3rCh1/chat-server/proto/roomspbb\x06proto3"
+	"\bIsMember\x12\x18.roomspb.IsMemberRequest\x1a\x19.roomspb.IsMemberResponse\x12&\n" +
+	"\x04Ping\x12\x0e.roomspb.Empty\x1a\x0e.roomspb.EmptyB-Z+github.com/P3rCh1/chat-server/proto/roomspbb\x06proto3"
 
 var (
 	file_rooms_rooms_proto_rawDescOnce sync.Once
@@ -676,7 +714,7 @@ func file_rooms_rooms_proto_rawDescGZIP() []byte {
 	return file_rooms_rooms_proto_rawDescData
 }
 
-var file_rooms_rooms_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_rooms_rooms_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_rooms_rooms_proto_goTypes = []any{
 	(*InviteRequest)(nil),         // 0: roomspb.InviteRequest
 	(*InviteResponse)(nil),        // 1: roomspb.InviteResponse
@@ -690,24 +728,27 @@ var file_rooms_rooms_proto_goTypes = []any{
 	(*UserInResponse)(nil),        // 9: roomspb.UserInResponse
 	(*IsMemberRequest)(nil),       // 10: roomspb.IsMemberRequest
 	(*IsMemberResponse)(nil),      // 11: roomspb.IsMemberResponse
-	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
+	(*Empty)(nil),                 // 12: roomspb.Empty
+	(*timestamppb.Timestamp)(nil), // 13: google.protobuf.Timestamp
 }
 var file_rooms_rooms_proto_depIdxs = []int32{
-	12, // 0: roomspb.GetResponse.CreatedAt:type_name -> google.protobuf.Timestamp
+	13, // 0: roomspb.GetResponse.CreatedAt:type_name -> google.protobuf.Timestamp
 	0,  // 1: roomspb.rooms.Invite:input_type -> roomspb.InviteRequest
 	2,  // 2: roomspb.rooms.Join:input_type -> roomspb.JoinRequest
 	4,  // 3: roomspb.rooms.Create:input_type -> roomspb.CreateRequest
 	6,  // 4: roomspb.rooms.Get:input_type -> roomspb.GetRequest
 	8,  // 5: roomspb.rooms.UserIn:input_type -> roomspb.UserInRequest
 	10, // 6: roomspb.rooms.IsMember:input_type -> roomspb.IsMemberRequest
-	1,  // 7: roomspb.rooms.Invite:output_type -> roomspb.InviteResponse
-	3,  // 8: roomspb.rooms.Join:output_type -> roomspb.JoinResponse
-	5,  // 9: roomspb.rooms.Create:output_type -> roomspb.CreateResponse
-	7,  // 10: roomspb.rooms.Get:output_type -> roomspb.GetResponse
-	9,  // 11: roomspb.rooms.UserIn:output_type -> roomspb.UserInResponse
-	11, // 12: roomspb.rooms.IsMember:output_type -> roomspb.IsMemberResponse
-	7,  // [7:13] is the sub-list for method output_type
-	1,  // [1:7] is the sub-list for method input_type
+	12, // 7: roomspb.rooms.Ping:input_type -> roomspb.Empty
+	1,  // 8: roomspb.rooms.Invite:output_type -> roomspb.InviteResponse
+	3,  // 9: roomspb.rooms.Join:output_type -> roomspb.JoinResponse
+	5,  // 10: roomspb.rooms.Create:output_type -> roomspb.CreateResponse
+	7,  // 11: roomspb.rooms.Get:output_type -> roomspb.GetResponse
+	9,  // 12: roomspb.rooms.UserIn:output_type -> roomspb.UserInResponse
+	11, // 13: roomspb.rooms.IsMember:output_type -> roomspb.IsMemberResponse
+	12, // 14: roomspb.rooms.Ping:output_type -> roomspb.Empty
+	8,  // [8:15] is the sub-list for method output_type
+	1,  // [1:8] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -724,7 +765,7 @@ func file_rooms_rooms_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rooms_rooms_proto_rawDesc), len(file_rooms_rooms_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

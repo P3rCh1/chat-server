@@ -7,15 +7,38 @@ http:
   shutdown_timeout: "10s"
   rate_limit: 100
 
+websocket:
+  write_buf_size: 4096
+  read_buf_size: 4096
+  msg_max_size: 16384 
+  msg_max_length: 2000  
+  write_wait: 10s
+  pong_wait: 60s
+  ping_period: 54s
+  max_failed_pings: 3
+  enable_compression: true
+  check_origin: false
 
 services:
   session_addr: "session:50051"
   user_addr: "user:50052"  
-  rooms_addr: "rooms:50053"  
+  rooms_addr: "rooms:50053"
+  message_addr: "message:50054"
 
   timeouts:
     session: 3s
     user: 5s
     rooms: 4s
+    message: 3s
+
+kafka:
+  brokers:
+    - "kafka1:9092"
+    - "kafka2:9093"
+    - "kafka3:9094" 
+  topic: "messages"
+  group_id: my-consumer
+  worker_count: 3
+  timeout: 5s
 
 log_level: "debug"

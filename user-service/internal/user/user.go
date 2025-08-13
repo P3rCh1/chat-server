@@ -76,7 +76,7 @@ func (s *UserService) Register(
 	username,
 	email,
 	password string,
-) (int, error) {
+) (int64, error) {
 	const op = "user.Register"
 	profile := &models.Profile{
 		Username: username,
@@ -118,7 +118,7 @@ func (s *UserService) Login(
 		}
 	}()
 	resp, err := s.sessionClient.Generate(ctx, &sessionpb.GenerateRequest{
-		UID: int32(profile.ID),
+		UID: profile.ID,
 	})
 	if err != nil {
 		s.log.Error(op, "error", err)
@@ -129,7 +129,7 @@ func (s *UserService) Login(
 
 func (s *UserService) ChangeName(
 	ctx context.Context,
-	id int,
+	id int64,
 	newName string,
 ) error {
 	const op = "user.ChangeName"
@@ -160,17 +160,17 @@ func (s *UserService) ChangeName(
 
 func (s *UserService) Profile(
 	ctx context.Context,
-	UID int,
+	uid int64,
 ) (*models.Profile, error) {
 	const op = "user.Profile"
-	profile, err := s.redis.Get(ctx, UID)
+	profile, err := s.redis.Get(ctx, uid)
 	if profile != nil {
 		return profile, nil
 	}
 	if err != nil {
 		s.log.Error(op, "error", err)
 	}
-	profile, err = s.psql.Profile(ctx, UID)
+	profile, err = s.psql.Profile(ctx, uid)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
@@ -185,4 +185,8 @@ func (s *UserService) Profile(
 		}
 	}()
 	return profile, nil
+}
+
+func (s *UserService) Ping(ctx context.Context) {
+	s.sessionClient.Ping(ctx, &sessionpb.Empty{})
 }

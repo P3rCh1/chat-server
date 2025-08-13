@@ -13,63 +13,61 @@ service rooms {
     rpc Get(GetRequest) returns (GetResponse);
     rpc UserIn(UserInRequest) returns (UserInResponse);
     rpc IsMember(IsMemberRequest) returns (IsMemberResponse);
-    
+    rpc Ping(Empty) returns (Empty);    
 };
 
 message InviteRequest {
-    int32 CreatorUID = 1;
-    int32 UID = 2;
-    int32 RoomID = 3;
+    int64 CreatorUID = 1;
+    int64 UID = 2;
+    int64 RoomID = 3;
 };
 
 message InviteResponse {};
 
 message JoinRequest {
-    int32 UID = 2;
-    int32 RoomID = 3;
+    int64 UID = 2;
+    int64 RoomID = 3;
 };
 
 message JoinResponse {};
 
-
 message CreateRequest {
     string Name = 1;
-    int32 UID = 2;
+    int64 UID = 2;
     bool IsPrivate = 3;
 };
 
 message CreateResponse {
-    int32 RoomID = 1;
+    int64 RoomID = 1;
 };
 
-
 message GetRequest {
-    int32 RoomID = 1;
+    int64 RoomID = 1;
 };
 
 message GetResponse {
-    int32 RoomID = 1;
+    int64 RoomID = 1;
     string Name = 2;
-    int32 CreatorUID = 3;
+    int64 CreatorUID = 3;
     bool IsPrivate = 4;
     google.protobuf.Timestamp CreatedAt = 5;
 };
 
-
 message UserInRequest {
-    int32 UID = 1;
+    int64 UID = 1;
 };
 
 message UserInResponse {
-    repeated int32 IDs = 1;
+    repeated int64 IDs = 1;
 };
 
 message IsMemberRequest {
-    int32 UID = 1;
-    int32 RoomID = 2;
+    int64 UID = 1;
+    int64 RoomID = 2;
 };
 
 message IsMemberResponse {
     bool IsMember = 1;
 };
 
+message Empty {}

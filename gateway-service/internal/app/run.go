@@ -10,8 +10,10 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/config"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
+	"github.com/P3rCh1/chat-server/gateway-service/internal/handlers/message"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/handlers/rooms"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/handlers/user"
+	"github.com/P3rCh1/chat-server/gateway-service/internal/handlers/websocket"
 	mw "github.com/P3rCh1/chat-server/gateway-service/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -28,6 +30,7 @@ func Run(cfg *config.Config) {
 		r.Use(mw.Secure)
 		r.Use(middleware.Throttle(cfg.HTTP.RateLimit))
 		r.Use(mw.LogRequests(services.Log))
+		r.Use(mw.LogInternalErrors(services.Log))
 		r.Post("/register", user.Register(services))
 		r.Get(fmt.Sprintf("/profile/{%s}", user.URLParam), user.AnotherProfile(services))
 		r.Get(fmt.Sprintf("/room/{%s}", rooms.URLParam), rooms.Get(services))
@@ -40,10 +43,10 @@ func Run(cfg *config.Config) {
 			r.Put("/invite", rooms.Invite(services))
 			r.Put("/join", rooms.Join(services))
 			r.Get("/rooms", rooms.UserIn(services))
-			// r.Get("/messages/{roomID}", handlers.Get(services))
+			r.Get("/messages/{roomID}", message.Get(services))
 		})
 	})
-	//r.HandleFunc("/ws", ws.HandlerFunc(services))
+	r.HandleFunc("/ws", websocket.Connector(cfg, services))
 	server := &http.Server{
 		Addr:         cfg.HTTP.Host + ":" + cfg.HTTP.Port,
 		Handler:      r,
@@ -70,13 +73,13 @@ func Run(cfg *config.Config) {
 	defer cancel()
 	services.Log.Info("shutting down server...")
 	grace := true
-	// if err := ws.Shutdown(shutdownCtx, services); err != nil {
-	// 	services.Log.Error(
-	// 		"websocket shutdown error",
-	// 		"error", err,
-	// 	)
-	// 	grace = false
-	// }
+	if err := websocket.Shutdown(shutdownCtx); err != nil {
+		services.Log.Error(
+			"websocket shutdown error",
+			"error", err,
+		)
+		grace = false
+	}
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		services.Log.Error(
 			"server shutdown error",

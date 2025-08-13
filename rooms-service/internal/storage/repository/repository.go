@@ -64,29 +64,29 @@ func (r *Repository) CreateRoom(ctx context.Context, room *models.Room) error {
 	return nil
 }
 
-func (r *Repository) CreatorID(ctx context.Context, roomID int) (int, error) {
+func (r *Repository) CreatorID(ctx context.Context, roomID int64) (int64, error) {
 	room, err := r.GetRoom(ctx, roomID)
 	if err != nil {
 		return 0, err
 	}
-	return int(room.CreatorUID), nil
+	return room.CreatorUID, nil
 }
 
-func (r *Repository) AddToRoom(ctx context.Context, UID, roomID int) error {
-	err := r.psql.AddToRoom(ctx, UID, roomID)
+func (r *Repository) AddToRoom(ctx context.Context, uid, roomID int64) error {
+	err := r.psql.AddToRoom(ctx, uid, roomID)
 	if err != nil {
 		return err
 	}
-	if err := r.roomMembers.AddSingle(ctx, UID, roomID); err != nil {
+	if err := r.roomMembers.AddSingle(ctx, uid, roomID); err != nil {
 		if err == cache.NotFound {
-			r.log.Debug("not found user`s rooms in cache", "UID", UID)
+			r.log.Debug("not found user`s rooms in cache", "UID", uid)
 		}
 		r.log.Error("add to room redis fail", "error", err)
 	}
 	return nil
 }
 
-func (r *Repository) IsPrivate(ctx context.Context, roomID int) (bool, error) {
+func (r *Repository) IsPrivate(ctx context.Context, roomID int64) (bool, error) {
 	room, err := r.GetRoom(ctx, roomID)
 	if err != nil {
 		return false, err
@@ -94,22 +94,22 @@ func (r *Repository) IsPrivate(ctx context.Context, roomID int) (bool, error) {
 	return room.IsPrivate, nil
 }
 
-func (r *Repository) GetUserRooms(ctx context.Context, UID int) ([]int, error) {
-	rooms, err := r.roomMembers.Members(ctx, UID)
+func (r *Repository) GetUserRooms(ctx context.Context, uid int64) ([]int64, error) {
+	rooms, err := r.roomMembers.Members(ctx, uid)
 	if err == nil {
 		return rooms, nil
 	}
 	if err == cache.NotFound {
-		r.log.Debug("not found user`s rooms in cache", "UID", UID)
+		r.log.Debug("not found user`s rooms in cache", "UID", uid)
 	} else {
 		r.log.Error("get user`s rooms redis fail", "error", err)
 	}
-	rooms, err = r.psql.GetUserRooms(ctx, UID)
+	rooms, err = r.psql.GetUserRooms(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
 	go func() {
-		err := r.roomMembers.Add(ctx, UID, rooms...)
+		err := r.roomMembers.Add(ctx, uid, rooms...)
 		if err != nil {
 			r.log.Error("set user`s rooms redis fail", "error", err)
 		}
@@ -117,7 +117,7 @@ func (r *Repository) GetUserRooms(ctx context.Context, UID int) ([]int, error) {
 	return rooms, nil
 }
 
-func (r *Repository) GetRoom(ctx context.Context, roomID int) (*models.Room, error) {
+func (r *Repository) GetRoom(ctx context.Context, roomID int64) (*models.Room, error) {
 	room, err := r.rooms.Get(ctx, roomID)
 	if err == nil {
 		return room, nil
@@ -140,8 +140,8 @@ func (r *Repository) GetRoom(ctx context.Context, roomID int) (*models.Room, err
 	return room, nil
 }
 
-func (r *Repository) IsMember(ctx context.Context, UID, roomID int) (bool, error) {
-	isMember, err := r.roomMembers.IsMember(ctx, UID, roomID)
+func (r *Repository) IsMember(ctx context.Context, uid, roomID int64) (bool, error) {
+	isMember, err := r.roomMembers.IsMember(ctx, uid, roomID)
 	if err == nil {
 		return isMember, nil
 	}
@@ -150,5 +150,5 @@ func (r *Repository) IsMember(ctx context.Context, UID, roomID int) (bool, error
 	} else {
 		r.log.Error("check room membership redis fail", "error", err)
 	}
-	return r.psql.IsMember(ctx, UID, roomID)
+	return r.psql.IsMember(ctx, uid, roomID)
 }

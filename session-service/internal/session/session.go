@@ -29,7 +29,7 @@ func New(cfg *config.Config, log *slog.Logger) *SessionService {
 	}
 }
 
-func (s *SessionService) Generate(ctx context.Context, id int) (string, error) {
+func (s *SessionService) Generate(ctx context.Context, id int64) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"UID": id,
 		"exp": time.Now().Add(s.Expire).Unix(),
@@ -37,7 +37,7 @@ func (s *SessionService) Generate(ctx context.Context, id int) (string, error) {
 	return token.SignedString(s.Secret)
 }
 
-func (s *SessionService) Verify(ctx context.Context, tokenString string) (int, error) {
+func (s *SessionService) Verify(ctx context.Context, tokenString string) (int64, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		return s.Secret, nil
 	})
@@ -58,5 +58,9 @@ func (s *SessionService) Verify(ctx context.Context, tokenString string) (int, e
 	if !ok {
 		return 0, ErrInvalidToken
 	}
-	return int(uid), nil
+	return int64(uid), nil
+}
+
+func (s *SessionService) Ping(ctx context.Context) {
+	return
 }

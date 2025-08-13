@@ -67,7 +67,7 @@ func (x *VerifyRequest) GetToken() string {
 
 type VerifyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,7 +102,7 @@ func (*VerifyResponse) Descriptor() ([]byte, []int) {
 	return file_session_session_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *VerifyResponse) GetUID() int32 {
+func (x *VerifyResponse) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -111,7 +111,7 @@ func (x *VerifyResponse) GetUID() int32 {
 
 type GenerateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -146,7 +146,7 @@ func (*GenerateRequest) Descriptor() ([]byte, []int) {
 	return file_session_session_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GenerateRequest) GetUID() int32 {
+func (x *GenerateRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -197,6 +197,42 @@ func (x *GenerateResponse) GetToken() string {
 	return ""
 }
 
+type Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	mi := &file_session_session_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_session_session_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_session_session_proto_rawDescGZIP(), []int{4}
+}
+
 var File_session_session_proto protoreflect.FileDescriptor
 
 const file_session_session_proto_rawDesc = "" +
@@ -205,14 +241,16 @@ const file_session_session_proto_rawDesc = "" +
 	"\rVerifyRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"\"\n" +
 	"\x0eVerifyResponse\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\"#\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"#\n" +
 	"\x0fGenerateRequest\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\"(\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"(\n" +
 	"\x10GenerateResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token2\x89\x01\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\a\n" +
+	"\x05Empty2\xb3\x01\n" +
 	"\aSession\x12;\n" +
 	"\x06Verify\x12\x17.sesionpb.VerifyRequest\x1a\x18.sesionpb.VerifyResponse\x12A\n" +
-	"\bGenerate\x12\x19.sesionpb.GenerateRequest\x1a\x1a.sesionpb.GenerateResponseB/Z-github.com/P3rCh1/chat-server/proto/sessionpbb\x06proto3"
+	"\bGenerate\x12\x19.sesionpb.GenerateRequest\x1a\x1a.sesionpb.GenerateResponse\x12(\n" +
+	"\x04Ping\x12\x0f.sesionpb.Empty\x1a\x0f.sesionpb.EmptyB/Z-github.com/P3rCh1/chat-server/proto/sessionpbb\x06proto3"
 
 var (
 	file_session_session_proto_rawDescOnce sync.Once
@@ -226,20 +264,23 @@ func file_session_session_proto_rawDescGZIP() []byte {
 	return file_session_session_proto_rawDescData
 }
 
-var file_session_session_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_session_session_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_session_session_proto_goTypes = []any{
 	(*VerifyRequest)(nil),    // 0: sesionpb.VerifyRequest
 	(*VerifyResponse)(nil),   // 1: sesionpb.VerifyResponse
 	(*GenerateRequest)(nil),  // 2: sesionpb.GenerateRequest
 	(*GenerateResponse)(nil), // 3: sesionpb.GenerateResponse
+	(*Empty)(nil),            // 4: sesionpb.Empty
 }
 var file_session_session_proto_depIdxs = []int32{
 	0, // 0: sesionpb.Session.Verify:input_type -> sesionpb.VerifyRequest
 	2, // 1: sesionpb.Session.Generate:input_type -> sesionpb.GenerateRequest
-	1, // 2: sesionpb.Session.Verify:output_type -> sesionpb.VerifyResponse
-	3, // 3: sesionpb.Session.Generate:output_type -> sesionpb.GenerateResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	4, // 2: sesionpb.Session.Ping:input_type -> sesionpb.Empty
+	1, // 3: sesionpb.Session.Verify:output_type -> sesionpb.VerifyResponse
+	3, // 4: sesionpb.Session.Generate:output_type -> sesionpb.GenerateResponse
+	4, // 5: sesionpb.Session.Ping:output_type -> sesionpb.Empty
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -256,7 +297,7 @@ func file_session_session_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_session_session_proto_rawDesc), len(file_session_session_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

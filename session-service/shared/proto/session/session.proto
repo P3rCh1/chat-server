@@ -7,6 +7,7 @@ package sesionpb;
 service Session {
     rpc Verify (VerifyRequest) returns (VerifyResponse);
     rpc Generate(GenerateRequest) returns (GenerateResponse);
+    rpc Ping(Empty) returns (Empty);
 }
 
 message VerifyRequest {
@@ -14,14 +15,16 @@ message VerifyRequest {
 }
 
 message VerifyResponse {
-    int32 UID = 1;
+    int64 UID = 1;
 }
 
 message GenerateRequest {
-    int32 UID = 1;
+    int64 UID = 1;
 }
 
 message GenerateResponse {
     string token = 1;
 }
+
+message Empty{}
 

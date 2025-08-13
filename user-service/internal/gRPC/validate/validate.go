@@ -20,6 +20,9 @@ func joinInvalidArgs(errs ...error) error {
 			msgs = append(msgs, status.Message())
 		}
 	}
+	if len(msgs) == 0 {
+		return nil
+	}
 	return status.Error(codes.InvalidArgument, strings.Join(msgs, "; "))
 }
 

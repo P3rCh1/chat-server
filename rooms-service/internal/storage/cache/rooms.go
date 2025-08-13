@@ -42,7 +42,7 @@ func (c *RedisRooms) Set(ctx context.Context, r *models.Room) error {
 	return nil
 }
 
-func (c *RedisRooms) Get(ctx context.Context, id int) (*models.Room, error) {
+func (c *RedisRooms) Get(ctx context.Context, id int64) (*models.Room, error) {
 	key := fmt.Sprintf(c.key, id)
 	str, err := c.client.Get(ctx, key).Result()
 	if err != nil {

@@ -37,7 +37,7 @@ func (s *RoomsService) Close() {
 func (s *RoomsService) Create(
 	ctx context.Context,
 	room *models.Room,
-) (int32, error) {
+) (int64, error) {
 	const op = "user.Create"
 	err := s.repo.CreateRoom(ctx, room)
 	if err != nil {
@@ -52,10 +52,10 @@ func (s *RoomsService) Create(
 
 func (s *RoomsService) Invite(
 	ctx context.Context,
-	requesterUID, invitedUID, roomID int32,
+	requesterUID, invitedUID, roomID int64,
 ) error {
 	const op = "user.Invite"
-	creatorID, err := s.repo.CreatorID(ctx, int(roomID))
+	creatorID, err := s.repo.CreatorID(ctx, roomID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return err
@@ -63,10 +63,10 @@ func (s *RoomsService) Invite(
 		s.log.Error(op, "error", err)
 		return fmt.Errorf("get creator error: %w", err)
 	}
-	if creatorID != int(requesterUID) {
+	if creatorID != requesterUID {
 		return status_error.NoAccess
 	}
-	err = s.repo.AddToRoom(ctx, int(invitedUID), int(roomID))
+	err = s.repo.AddToRoom(ctx, invitedUID, roomID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return err
@@ -78,10 +78,10 @@ func (s *RoomsService) Invite(
 
 func (s *RoomsService) Join(
 	ctx context.Context,
-	UID, roomID int32,
+	UID, roomID int64,
 ) error {
 	const op = "user.Join"
-	isPrivate, err := s.repo.IsPrivate(ctx, int(roomID))
+	isPrivate, err := s.repo.IsPrivate(ctx, roomID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return err
@@ -92,7 +92,7 @@ func (s *RoomsService) Join(
 	if isPrivate {
 		return status_error.Private
 	}
-	err = s.repo.AddToRoom(ctx, int(UID), int(roomID))
+	err = s.repo.AddToRoom(ctx, UID, roomID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return err
@@ -104,10 +104,10 @@ func (s *RoomsService) Join(
 
 func (s *RoomsService) Get(
 	ctx context.Context,
-	roomID int32,
+	roomID int64,
 ) (*models.Room, error) {
 	const op = "user.Get"
-	room, err := s.repo.GetRoom(ctx, int(roomID))
+	room, err := s.repo.GetRoom(ctx, roomID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
@@ -120,10 +120,10 @@ func (s *RoomsService) Get(
 
 func (s *RoomsService) UserIn(
 	ctx context.Context,
-	UID int32,
-) ([]int32, error) {
+	uid int64,
+) ([]int64, error) {
 	const op = "user.UserIn"
-	rooms, err := s.repo.GetUserRooms(ctx, int(UID))
+	rooms, err := s.repo.GetUserRooms(ctx, uid)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
@@ -131,19 +131,19 @@ func (s *RoomsService) UserIn(
 		s.log.Error(op, "error", err)
 		return nil, fmt.Errorf("get creator error: %w", err)
 	}
-	resp := make([]int32, len(rooms))
+	resp := make([]int64, len(rooms))
 	for i, v := range rooms {
-		resp[i] = int32(v)
+		resp[i] = v
 	}
 	return resp, nil
 }
 
 func (s *RoomsService) IsMember(
 	ctx context.Context,
-	UID, roomID int32,
+	uid, roomID int64,
 ) (bool, error) {
 	const op = "user.UserIn"
-	isMember, err := s.repo.IsMember(ctx, int(UID), int(roomID))
+	isMember, err := s.repo.IsMember(ctx, uid, roomID)
 	if err != nil {
 		if status_error.IsStatusError(err) {
 			return false, err
@@ -152,4 +152,8 @@ func (s *RoomsService) IsMember(
 		return false, fmt.Errorf("check IsMember error: %w", err)
 	}
 	return isMember, nil
+}
+
+func (s *RoomsService) Ping(ctx context.Context) {
+	return
 }

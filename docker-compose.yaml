@@ -1,6 +1,12 @@
+networks:
+  chatnet:
+    driver: bridge
+
 services:
   gateway:
     build: ./gateway-service
+    networks:
+      - chatnet
     ports:
       - "8080:8080"
     environment:
@@ -8,11 +14,21 @@ services:
     depends_on:
       rooms:
         condition: service_healthy
+      message:
+        condition: service_healthy
+      session:
+        condition: service_healthy
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
 
   session:
     build: ./session-service
-    ports:
-      - "50051:50051"
+    networks:
+      - chatnet
     environment:
       CONFIG_PATH: ${SESSION_CONFIG_PATH}
       JWT_SECRET: ${JWT_SECRET}
@@ -21,10 +37,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
+
   user:
     build: ./user-service
-    ports:
-      - "50052:50052"
+    networks:
+      - chatnet
     environment:
       CONFIG_PATH: ${USER_CONFIG_PATH}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -46,8 +63,8 @@ services:
 
   rooms:
     build: ./rooms-service
-    ports:
-      - "50053:50053"
+    networks:
+      - chatnet
     environment:
       CONFIG_PATH: ${USER_CONFIG_PATH}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -57,14 +74,42 @@ services:
     depends_on:
       user:
         condition: service_healthy
+      message:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 50053 || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 3
 
+  message:
+    build: ./message-service
+    networks:
+      - chatnet
+    environment:
+      CONFIG_PATH: ${USER_CONFIG_PATH}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50054 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
   postgres:
     image: postgres:latest
+    networks:
+      - chatnet
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -79,6 +124,8 @@ services:
 
   redis:
     image: redis:latest
+    networks:
+      - chatnet
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     healthcheck:
@@ -86,6 +133,87 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    networks:
+      - chatnet
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/2181 && exit 0 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.4.0
+    networks:
+      - chatnet
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
+      KAFKA_MIN_INSYNC_REPLICAS: "2"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.4.0
+    networks:
+      - chatnet
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
+      KAFKA_MIN_INSYNC_REPLICAS: "2"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9093 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.4.0
+    networks:
+      - chatnet
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: "false"
+      KAFKA_MIN_INSYNC_REPLICAS: "2"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9094 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pg_data:

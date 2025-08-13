@@ -13,10 +13,9 @@ import (
 )
 
 type Cacher struct {
-	client  *redis.Client
-	timeout time.Duration
-	ttl     time.Duration
-	key     string
+	client *redis.Client
+	ttl    time.Duration
+	key    string
 }
 
 func New(cfg *config.Redis) (*Cacher, error) {
@@ -53,7 +52,7 @@ func (c *Cacher) Set(ctx context.Context, p *models.Profile) error {
 	return nil
 }
 
-func (c *Cacher) Get(ctx context.Context, id int) (*models.Profile, error) {
+func (c *Cacher) Get(ctx context.Context, id int64) (*models.Profile, error) {
 	key := fmt.Sprintf(c.key, id)
 	str, err := c.client.Get(ctx, key).Result()
 	if err != nil {

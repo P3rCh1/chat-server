@@ -18,12 +18,13 @@ type ServerAPI struct {
 }
 
 type Rooms interface {
-	Create(ctx context.Context, room *models.Room) (int32, error)
-	Invite(ctx context.Context, requesterUID, invitedUID, roomID int32) error
-	Join(ctx context.Context, UID, roomID int32) error
-	Get(ctx context.Context, roomID int32) (*models.Room, error)
-	UserIn(ctx context.Context, UID int32) ([]int32, error)
-	IsMember(ctx context.Context, UID, roomID int32) (bool, error)
+	Create(ctx context.Context, room *models.Room) (int64, error)
+	Invite(ctx context.Context, requesterUID, invitedUID, roomID int64) error
+	Join(ctx context.Context, UID, roomID int64) error
+	Get(ctx context.Context, roomID int64) (*models.Room, error)
+	UserIn(ctx context.Context, UID int64) ([]int64, error)
+	IsMember(ctx context.Context, UID, roomID int64) (bool, error)
+	Ping(ctx context.Context)
 }
 
 func Register(gRPCServer *grpc.Server, rooms Rooms) {
@@ -110,4 +111,9 @@ func (s *ServerAPI) IsMember(ctx context.Context, r *roomspb.IsMemberRequest) (*
 	} else {
 		return &roomspb.IsMemberResponse{IsMember: isMember}, nil
 	}
+}
+
+func (s *ServerAPI) Ping(ctx context.Context, r *roomspb.Empty) (*roomspb.Empty, error) {
+	s.rooms.Ping(ctx)
+	return &roomspb.Empty{}, nil
 }

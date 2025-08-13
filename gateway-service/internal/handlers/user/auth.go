@@ -12,6 +12,7 @@ import (
 
 func Register(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		var user userpb.RegisterRequest
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			http.Error(w, "invalid argument", http.StatusBadRequest)
@@ -30,6 +31,7 @@ func Register(s *gateway.Services) http.HandlerFunc {
 
 func Login(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		var loginRequest userpb.LoginRequest
 		if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
 			http.Error(w, "invalid argument", http.StatusBadRequest)

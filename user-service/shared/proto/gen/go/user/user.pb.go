@@ -84,7 +84,7 @@ func (x *RegisterRequest) GetPassword() string {
 
 type RegisterResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -119,7 +119,7 @@ func (*RegisterResponse) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *RegisterResponse) GetUID() int32 {
+func (x *RegisterResponse) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -224,7 +224,7 @@ func (x *LoginResponse) GetToken() string {
 
 type ChangeNameRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	NewName       string                 `protobuf:"bytes,2,opt,name=new_name,json=newName,proto3" json:"new_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -260,7 +260,7 @@ func (*ChangeNameRequest) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ChangeNameRequest) GetUID() int32 {
+func (x *ChangeNameRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -312,7 +312,7 @@ func (*ChangeNameResponse) Descriptor() ([]byte, []int) {
 
 type ProfileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -347,7 +347,7 @@ func (*ProfileRequest) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *ProfileRequest) GetUID() int32 {
+func (x *ProfileRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -356,7 +356,7 @@ func (x *ProfileRequest) GetUID() int32 {
 
 type ProfileResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
@@ -394,7 +394,7 @@ func (*ProfileResponse) Descriptor() ([]byte, []int) {
 	return file_user_user_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *ProfileResponse) GetUID() int32 {
+func (x *ProfileResponse) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -422,6 +422,42 @@ func (x *ProfileResponse) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	mi := &file_user_user_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{8}
+}
+
 var File_user_user_proto protoreflect.FileDescriptor
 
 const file_user_user_proto_rawDesc = "" +
@@ -432,30 +468,32 @@ const file_user_user_proto_rawDesc = "" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\"$\n" +
 	"\x10RegisterResponse\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\"@\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"@\n" +
 	"\fLoginRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"%\n" +
 	"\rLoginResponse\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"@\n" +
 	"\x11ChangeNameRequest\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\x12\x19\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\x12\x19\n" +
 	"\bnew_name\x18\x02 \x01(\tR\anewName\"\x14\n" +
 	"\x12ChangeNameResponse\"\"\n" +
 	"\x0eProfileRequest\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\"\x90\x01\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"\x90\x01\n" +
 	"\x0fProfileResponse\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\x12\x1a\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x129\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt2\xfc\x01\n" +
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\a\n" +
+	"\x05Empty2\xa2\x02\n" +
 	"\x04User\x12=\n" +
 	"\bRegister\x12\x17.userpb.RegisterRequest\x1a\x18.userpb.RegisterResponse\x124\n" +
 	"\x05Login\x12\x14.userpb.LoginRequest\x1a\x15.userpb.LoginResponse\x12C\n" +
 	"\n" +
 	"ChangeName\x12\x19.userpb.ChangeNameRequest\x1a\x1a.userpb.ChangeNameResponse\x12:\n" +
-	"\aProfile\x12\x16.userpb.ProfileRequest\x1a\x17.userpb.ProfileResponseB,Z*github.com/P3rCh1/chat-server/proto/userpbb\x06proto3"
+	"\aProfile\x12\x16.userpb.ProfileRequest\x1a\x17.userpb.ProfileResponse\x12$\n" +
+	"\x04Ping\x12\r.userpb.Empty\x1a\r.userpb.EmptyB,Z*github.com/P3rCh1/chat-server/proto/userpbb\x06proto3"
 
 var (
 	file_user_user_proto_rawDescOnce sync.Once
@@ -469,7 +507,7 @@ func file_user_user_proto_rawDescGZIP() []byte {
 	return file_user_user_proto_rawDescData
 }
 
-var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_user_user_proto_goTypes = []any{
 	(*RegisterRequest)(nil),       // 0: userpb.RegisterRequest
 	(*RegisterResponse)(nil),      // 1: userpb.RegisterResponse
@@ -479,20 +517,23 @@ var file_user_user_proto_goTypes = []any{
 	(*ChangeNameResponse)(nil),    // 5: userpb.ChangeNameResponse
 	(*ProfileRequest)(nil),        // 6: userpb.ProfileRequest
 	(*ProfileResponse)(nil),       // 7: userpb.ProfileResponse
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*Empty)(nil),                 // 8: userpb.Empty
+	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
 }
 var file_user_user_proto_depIdxs = []int32{
-	8, // 0: userpb.ProfileResponse.created_at:type_name -> google.protobuf.Timestamp
+	9, // 0: userpb.ProfileResponse.created_at:type_name -> google.protobuf.Timestamp
 	0, // 1: userpb.User.Register:input_type -> userpb.RegisterRequest
 	2, // 2: userpb.User.Login:input_type -> userpb.LoginRequest
 	4, // 3: userpb.User.ChangeName:input_type -> userpb.ChangeNameRequest
 	6, // 4: userpb.User.Profile:input_type -> userpb.ProfileRequest
-	1, // 5: userpb.User.Register:output_type -> userpb.RegisterResponse
-	3, // 6: userpb.User.Login:output_type -> userpb.LoginResponse
-	5, // 7: userpb.User.ChangeName:output_type -> userpb.ChangeNameResponse
-	7, // 8: userpb.User.Profile:output_type -> userpb.ProfileResponse
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
+	8, // 5: userpb.User.Ping:input_type -> userpb.Empty
+	1, // 6: userpb.User.Register:output_type -> userpb.RegisterResponse
+	3, // 7: userpb.User.Login:output_type -> userpb.LoginResponse
+	5, // 8: userpb.User.ChangeName:output_type -> userpb.ChangeNameResponse
+	7, // 9: userpb.User.Profile:output_type -> userpb.ProfileResponse
+	8, // 10: userpb.User.Ping:output_type -> userpb.Empty
+	6, // [6:11] is the sub-list for method output_type
+	1, // [1:6] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -509,7 +550,7 @@ func file_user_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_user_proto_rawDesc), len(file_user_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

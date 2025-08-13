@@ -97,7 +97,7 @@ func (p *Postgres) Login(ctx context.Context, email, password string) (*models.P
 	return profile, nil
 }
 
-func (p *Postgres) Profile(ctx context.Context, id int) (*models.Profile, error) {
+func (p *Postgres) Profile(ctx context.Context, id int64) (*models.Profile, error) {
 	const query = `
 		SELECT username, email, created_at
 		FROM users
@@ -116,7 +116,7 @@ func (p *Postgres) Profile(ctx context.Context, id int) (*models.Profile, error)
 	return profile, nil
 }
 
-func (p *Postgres) ChangeName(ctx context.Context, id int, newName string) error {
+func (p *Postgres) ChangeName(ctx context.Context, id int64, newName string) error {
 	const query = `
 		UPDATE users 
         SET username = $1 

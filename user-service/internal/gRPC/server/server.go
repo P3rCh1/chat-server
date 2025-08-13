@@ -20,10 +20,11 @@ type ServerAPI struct {
 
 type User interface {
 	Register(ctx context.Context, username, email, password string,
-	) (int, error)
+	) (int64, error)
 	Login(ctx context.Context, email, password string) (string, error)
-	ChangeName(ctx context.Context, UID int, newName string) error
-	Profile(ctx context.Context, UID int) (*models.Profile, error)
+	ChangeName(ctx context.Context, uid int64, newName string) error
+	Profile(ctx context.Context, uid int64) (*models.Profile, error)
+	Ping(ctx context.Context)
 }
 
 func Register(gRPCServer *grpc.Server, user User) {
@@ -40,7 +41,7 @@ func (s *ServerAPI) Register(ctx context.Context, r *userpb.RegisterRequest) (*u
 		}
 		return nil, status.Errorf(codes.Internal, "unexpected error: %s", err)
 	} else {
-		return &userpb.RegisterResponse{UID: int32(id)}, nil
+		return &userpb.RegisterResponse{UID: id}, nil
 	}
 }
 
@@ -62,7 +63,7 @@ func (s *ServerAPI) ChangeName(ctx context.Context, r *userpb.ChangeNameRequest)
 	if err := validate.Name(r.NewName); err != nil {
 		return nil, err
 	}
-	if err := s.user.ChangeName(ctx, int(r.UID), r.NewName); err != nil {
+	if err := s.user.ChangeName(ctx, r.UID, r.NewName); err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
 		}
@@ -72,7 +73,7 @@ func (s *ServerAPI) ChangeName(ctx context.Context, r *userpb.ChangeNameRequest)
 }
 
 func (s *ServerAPI) Profile(ctx context.Context, r *userpb.ProfileRequest) (*userpb.ProfileResponse, error) {
-	if profile, err := s.user.Profile(ctx, int(r.UID)); err != nil {
+	if profile, err := s.user.Profile(ctx, r.UID); err != nil {
 		if status_error.IsStatusError(err) {
 			return nil, err
 		}
@@ -85,4 +86,8 @@ func (s *ServerAPI) Profile(ctx context.Context, r *userpb.ProfileRequest) (*use
 			CreatedAt: timestamppb.New(profile.CreatedAt),
 		}, nil
 	}
+}
+
+func (s *ServerAPI) Ping(ctx context.Context, r *userpb.Empty) (*userpb.Empty, error) {
+	return &userpb.Empty{}, nil
 }

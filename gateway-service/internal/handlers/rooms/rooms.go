@@ -3,7 +3,6 @@ package rooms
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,13 +18,14 @@ var URLParam = "roomID"
 
 func Create(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		req := roomspb.CreateRequest{}
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, "invalid data", http.StatusBadRequest)
 			return
 		}
-		req.UID = r.Context().Value(middleware.UIDContextKey).(int32)
+		req.UID = r.Context().Value(middleware.UIDContextKey).(int64)
 		ctx, cancel := context.WithTimeout(r.Context(), s.Timeouts.Rooms)
 		defer cancel()
 		resp, err := s.Rooms.Create(ctx, &req)
@@ -39,13 +39,14 @@ func Create(s *gateway.Services) http.HandlerFunc {
 
 func Join(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		req := roomspb.JoinRequest{}
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, "invalid data", http.StatusBadRequest)
 			return
 		}
-		req.UID = r.Context().Value(middleware.UIDContextKey).(int32)
+		req.UID = r.Context().Value(middleware.UIDContextKey).(int64)
 		ctx, cancel := context.WithTimeout(context.Background(), s.Timeouts.Rooms)
 		defer cancel()
 		_, err = s.Rooms.Join(ctx, &req)
@@ -59,13 +60,14 @@ func Join(s *gateway.Services) http.HandlerFunc {
 
 func Invite(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		req := roomspb.InviteRequest{}
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, "invalid data", http.StatusBadRequest)
 			return
 		}
-		req.CreatorUID = r.Context().Value(middleware.UIDContextKey).(int32)
+		req.CreatorUID = r.Context().Value(middleware.UIDContextKey).(int64)
 		ctx, cancel := context.WithTimeout(context.Background(), s.Timeouts.Rooms)
 		defer cancel()
 		_, err = s.Rooms.Invite(ctx, &req)
@@ -80,24 +82,23 @@ func Invite(s *gateway.Services) http.HandlerFunc {
 func Get(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		roomID, err := strconv.Atoi(chi.URLParam(r, URLParam))
+		roomID, err := strconv.ParseInt(chi.URLParam(r, URLParam), 10, 64)
 		if err != nil {
 			http.Error(w, "invalid roomID", http.StatusBadRequest)
 			return
 		}
-		req := roomspb.GetRequest{RoomID: int32(roomID)}
+		req := roomspb.GetRequest{RoomID: int64(roomID)}
 		ctx, cancel := context.WithTimeout(context.Background(), s.Timeouts.Rooms)
 		defer cancel()
 		respGRPC, err := s.Rooms.Get(ctx, &req)
-		fmt.Println(respGRPC)
 		if err != nil {
 			responses.GatewayGRPCErr(w, s.Log, "rooms", err)
 			return
 		}
 		resp := struct {
-			RoomID     int32     `json:"roomID"`
+			RoomID     int64     `json:"roomID"`
 			Name       string    `json:"name"`
-			CreatorUID int32     `json:"creatorUID"`
+			CreatorUID int64     `json:"creatorUID"`
 			IsPrivate  bool      `json:"isPrivate"`
 			CreatedAt  time.Time `json:"createdAt"`
 		}{
@@ -114,7 +115,7 @@ func Get(s *gateway.Services) http.HandlerFunc {
 func UserIn(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		req := roomspb.UserInRequest{UID: r.Context().Value(middleware.UIDContextKey).(int32)}
+		req := roomspb.UserInRequest{UID: r.Context().Value(middleware.UIDContextKey).(int64)}
 		ctx, cancel := context.WithTimeout(context.Background(), s.Timeouts.Rooms)
 		defer cancel()
 		resp, err := s.Rooms.UserIn(ctx, &req)

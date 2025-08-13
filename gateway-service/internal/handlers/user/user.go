@@ -18,12 +18,13 @@ const URLParam = "UID"
 
 func ChangeName(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		var changeNameRequest userpb.ChangeNameRequest
 		if err := json.NewDecoder(r.Body).Decode(&changeNameRequest); err != nil {
 			http.Error(w, "invalid argument", http.StatusBadRequest)
 			return
 		}
-		changeNameRequest.UID = r.Context().Value(middleware.UIDContextKey).(int32)
+		changeNameRequest.UID = r.Context().Value(middleware.UIDContextKey).(int64)
 		ctx, cancel := context.WithTimeout(r.Context(), s.Timeouts.User)
 		defer cancel()
 		_, err := s.User.ChangeName(ctx, &changeNameRequest)
@@ -38,38 +39,38 @@ func ChangeName(s *gateway.Services) http.HandlerFunc {
 func MyProfile(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		UID := r.Context().Value(middleware.UIDContextKey).(int32)
-		profile(UID, s, w, r)
+		uid := r.Context().Value(middleware.UIDContextKey).(int64)
+		profile(uid, s, w, r)
 	}
 }
 
 func AnotherProfile(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		UID, err := strconv.Atoi(chi.URLParam(r, URLParam))
+		uid, err := strconv.ParseInt(chi.URLParam(r, URLParam), 10, 64)
 		if err != nil {
 			http.Error(w, "invalid UID", http.StatusBadRequest)
 			return
 		}
-		profile(int32(UID), s, w, r)
+		profile(uid, s, w, r)
 	}
 }
 
-func profile(UID int32, s *gateway.Services, w http.ResponseWriter, r *http.Request) {
+func profile(uid int64, s *gateway.Services, w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), s.Timeouts.User)
 	defer cancel()
-	profileProto, err := s.User.Profile(ctx, &userpb.ProfileRequest{UID: UID})
+	profileProto, err := s.User.Profile(ctx, &userpb.ProfileRequest{UID: uid})
 	if err != nil {
 		responses.GatewayGRPCErr(w, s.Log, "user", err)
 		return
 	}
 	profile := struct {
-		UID       int32     `json:"UID"`
+		uid       int64     `json:"uid"`
 		Username  string    `json:"username"`
 		Email     string    `json:"email"`
-		CreatedAt time.Time `json:"created_at"`
+		CreatedAt time.Time `json:"createdAt"`
 	}{
-		UID:       profileProto.UID,
+		uid:       profileProto.UID,
 		Username:  profileProto.Username,
 		Email:     profileProto.Email,
 		CreatedAt: profileProto.CreatedAt.AsTime(),

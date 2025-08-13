@@ -8,6 +8,7 @@ import (
 	"github.com/P3rCh1/chat-server/rooms-service/internal/config"
 	"github.com/P3rCh1/chat-server/rooms-service/internal/gRPC/status_error"
 	"github.com/P3rCh1/chat-server/rooms-service/internal/models"
+	_ "github.com/lib/pq"
 )
 
 type Postgres struct {
@@ -43,9 +44,7 @@ func New(cfg *config.Postgres) (*Postgres, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open postgresql: %w", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
-	defer cancel()
-	if err := migrate(ctx, db); err != nil {
+	if err := migrate(context.Background(), db); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to migrate postgres: %w", err)
 	}
@@ -98,11 +97,11 @@ func (r *Postgres) CreateRoom(ctx context.Context, room *models.Room) error {
 	return nil
 }
 
-func (r *Postgres) CreatorID(ctx context.Context, roomID int) (int, error) {
+func (r *Postgres) CreatorID(ctx context.Context, roomID int64) (int64, error) {
 	const query = `
 		SELECT creator_id FROM rooms WHERE id = $1
 	`
-	var creatorID int
+	var creatorID int64
 	err := r.db.QueryRowContext(ctx, query, roomID).Scan(&creatorID)
 	if err != nil {
 		statErr := ExpectedPGErr(err, status_error.UserNotFound, nil)
@@ -114,12 +113,12 @@ func (r *Postgres) CreatorID(ctx context.Context, roomID int) (int, error) {
 	return creatorID, nil
 }
 
-func (r *Postgres) AddToRoom(ctx context.Context, UID, roomID int) error {
+func (r *Postgres) AddToRoom(ctx context.Context, uid, roomID int64) error {
 	const query = `
 		INSERT INTO room_members (user_id, room_id)
 		VALUES ($1, $2)
 	`
-	_, err := r.db.ExecContext(ctx, query, UID, roomID)
+	_, err := r.db.ExecContext(ctx, query, uid, roomID)
 	if err != nil {
 		statErr := ExpectedPGErr(err, status_error.UserNotFound, status_error.AlreadyInRoom)
 		if statErr != nil {
@@ -130,7 +129,7 @@ func (r *Postgres) AddToRoom(ctx context.Context, UID, roomID int) error {
 	return nil
 }
 
-func (r *Postgres) IsPrivate(ctx context.Context, roomID int) (bool, error) {
+func (r *Postgres) IsPrivate(ctx context.Context, roomID int64) (bool, error) {
 	const query = `
 		SELECT is_private FROM rooms WHERE id = $1
 	`
@@ -146,11 +145,11 @@ func (r *Postgres) IsPrivate(ctx context.Context, roomID int) (bool, error) {
 	return isPrivate, nil
 }
 
-func (r *Postgres) GetUserRooms(ctx context.Context, UID int) ([]int, error) {
+func (r *Postgres) GetUserRooms(ctx context.Context, uid int64) ([]int64, error) {
 	const query = `
         SELECT room_id FROM room_members WHERE user_id = $1
     `
-	rows, err := r.db.Query(query, UID)
+	rows, err := r.db.Query(query, uid)
 	if err != nil {
 		statErr := ExpectedPGErr(err, status_error.UserNotFound, nil)
 		if statErr != nil {
@@ -159,9 +158,9 @@ func (r *Postgres) GetUserRooms(ctx context.Context, UID int) ([]int, error) {
 		return nil, fmt.Errorf("failed to get user`s rooms: %w", err)
 	}
 	defer rows.Close()
-	var rooms []int
+	var rooms []int64
 	for rows.Next() {
-		var roomID int
+		var roomID int64
 		if err := rows.Scan(&roomID); err != nil {
 			return nil, fmt.Errorf("failed to scan room: %w", err)
 		}
@@ -170,12 +169,12 @@ func (r *Postgres) GetUserRooms(ctx context.Context, UID int) ([]int, error) {
 	return rooms, nil
 }
 
-func (r *Postgres) GetRoom(ctx context.Context, roomID int) (*models.Room, error) {
+func (r *Postgres) GetRoom(ctx context.Context, roomID int64) (*models.Room, error) {
 	const query = `
         SELECT name, is_private, creator_id, created_at FROM rooms WHERE id = $1
     `
 	room := &models.Room{
-		RoomID: int32(roomID),
+		RoomID: roomID,
 	}
 	err := r.db.QueryRowContext(ctx, query, roomID).Scan(
 		&room.Name,
@@ -193,12 +192,12 @@ func (r *Postgres) GetRoom(ctx context.Context, roomID int) (*models.Room, error
 	return room, nil
 }
 
-func (r *Postgres) IsMember(ctx context.Context, UID, roomID int) (bool, error) {
+func (r *Postgres) IsMember(ctx context.Context, uid, roomID int64) (bool, error) {
 	const query = `
         SELECT EXISTS(SELECT 1 FROM room_members WHERE user_id = $1 AND room_id = $2) 
     `
 	var exists bool
-	err := r.db.QueryRowContext(ctx, query, UID, roomID).Scan(&exists)
+	err := r.db.QueryRowContext(ctx, query, uid, roomID).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check IsMember: %w", err)
 	}

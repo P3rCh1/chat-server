@@ -67,7 +67,7 @@ func (x *VerifyRequest) GetToken() string {
 
 type VerifyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,7 +102,7 @@ func (*VerifyResponse) Descriptor() ([]byte, []int) {
 	return file_session_session_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *VerifyResponse) GetUID() int32 {
+func (x *VerifyResponse) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -111,7 +111,7 @@ func (x *VerifyResponse) GetUID() int32 {
 
 type GenerateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int32                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -146,7 +146,7 @@ func (*GenerateRequest) Descriptor() ([]byte, []int) {
 	return file_session_session_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GenerateRequest) GetUID() int32 {
+func (x *GenerateRequest) GetUID() int64 {
 	if x != nil {
 		return x.UID
 	}
@@ -205,9 +205,9 @@ const file_session_session_proto_rawDesc = "" +
 	"\rVerifyRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"\"\n" +
 	"\x0eVerifyResponse\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\"#\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"#\n" +
 	"\x0fGenerateRequest\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x05R\x03UID\"(\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"(\n" +
 	"\x10GenerateResponse\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token2\x89\x01\n" +
 	"\aSession\x12;\n" +

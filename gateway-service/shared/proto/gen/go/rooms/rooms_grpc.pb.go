@@ -25,6 +25,7 @@ const (
 	Rooms_Get_FullMethodName      = "/roomspb.rooms/Get"
 	Rooms_UserIn_FullMethodName   = "/roomspb.rooms/UserIn"
 	Rooms_IsMember_FullMethodName = "/roomspb.rooms/IsMember"
+	Rooms_Ping_FullMethodName     = "/roomspb.rooms/Ping"
 )
 
 // RoomsClient is the client API for Rooms service.
@@ -37,6 +38,7 @@ type RoomsClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	UserIn(ctx context.Context, in *UserInRequest, opts ...grpc.CallOption) (*UserInResponse, error)
 	IsMember(ctx context.Context, in *IsMemberRequest, opts ...grpc.CallOption) (*IsMemberResponse, error)
+	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type roomsClient struct {
@@ -107,6 +109,16 @@ func (c *roomsClient) IsMember(ctx context.Context, in *IsMemberRequest, opts ..
 	return out, nil
 }
 
+func (c *roomsClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, Rooms_Ping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomsServer is the server API for Rooms service.
 // All implementations must embed UnimplementedRoomsServer
 // for forward compatibility.
@@ -117,6 +129,7 @@ type RoomsServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	UserIn(context.Context, *UserInRequest) (*UserInResponse, error)
 	IsMember(context.Context, *IsMemberRequest) (*IsMemberResponse, error)
+	Ping(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedRoomsServer()
 }
 
@@ -144,6 +157,9 @@ func (UnimplementedRoomsServer) UserIn(context.Context, *UserInRequest) (*UserIn
 }
 func (UnimplementedRoomsServer) IsMember(context.Context, *IsMemberRequest) (*IsMemberResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsMember not implemented")
+}
+func (UnimplementedRoomsServer) Ping(context.Context, *Empty) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (UnimplementedRoomsServer) mustEmbedUnimplementedRoomsServer() {}
 func (UnimplementedRoomsServer) testEmbeddedByValue()               {}
@@ -274,6 +290,24 @@ func _Rooms_IsMember_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Rooms_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomsServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Rooms_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomsServer).Ping(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Rooms_ServiceDesc is the grpc.ServiceDesc for Rooms service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -304,6 +338,10 @@ var Rooms_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IsMember",
 			Handler:    _Rooms_IsMember_Handler,
+		},
+		{
+			MethodName: "Ping",
+			Handler:    _Rooms_Ping_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
