@@ -9,7 +9,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/config"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
-	sessionpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/session"
+	sessionpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/session"
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

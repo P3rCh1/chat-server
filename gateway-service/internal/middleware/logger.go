@@ -46,7 +46,7 @@ func LogInternalErrors(logger *slog.Logger) func(next http.Handler) http.Handler
 			next.ServeHTTP(rw, r)
 			if rw.Status() == http.StatusInternalServerError {
 				logger.Info(
-					"HTTP error",
+					"internal error",
 					slog.String("id", requestID),
 					slog.Int("status", rw.Status()),
 					slog.String("path", r.URL.Path),

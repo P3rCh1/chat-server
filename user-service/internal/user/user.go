@@ -13,7 +13,7 @@ import (
 	"github.com/P3rCh1/chat-server/user-service/internal/models"
 	"github.com/P3rCh1/chat-server/user-service/internal/storage/cache"
 	"github.com/P3rCh1/chat-server/user-service/internal/storage/database"
-	sessionpb "github.com/P3rCh1/chat-server/user-service/shared/proto/gen/go/session"
+	sessionpb "github.com/P3rCh1/chat-server/user-service/pkg/proto/gen/go/session"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

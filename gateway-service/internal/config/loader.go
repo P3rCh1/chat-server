@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/P3rCh1/chat-server/gateway-service/shared/config"
-	"github.com/P3rCh1/chat-server/gateway-service/shared/logger"
+	"github.com/P3rCh1/chat-server/gateway-service/pkg/config"
+	"github.com/P3rCh1/chat-server/gateway-service/pkg/logger"
 )
 
 type Config struct {

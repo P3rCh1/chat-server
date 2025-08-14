@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/P3rCh1/chat-server/rooms-service/shared/config"
+	"github.com/P3rCh1/chat-server/rooms-service/pkg/config"
 )
 
 type Config struct {
@@ -14,6 +14,7 @@ type Config struct {
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 	Postgres        *Postgres     `yaml:"postgres"`
 	Redis           *Redis        `yaml:"redis"`
+	Kafka           *Kafka        `yaml:"kafka"`
 }
 
 type Postgres struct {
@@ -29,6 +30,11 @@ type Redis struct {
 	DB       int           `yaml:"db"`
 	TTL      time.Duration `yaml:"ttl"`
 	Password string
+}
+
+type Kafka struct {
+	Brokers []string `yaml:"brokers"`
+	Topic   string   `yaml:"topic"`
 }
 
 func (cfg *Config) Validate() error {
@@ -55,6 +61,10 @@ func Default() *Config {
 		Redis: &Redis{
 			Addr: "redis:6379",
 			TTL:  24 * time.Hour,
+		},
+		Kafka: &Kafka{
+			Brokers: []string{"kafka:9092"},
+			Topic:   "messages",
 		},
 	}
 }

@@ -3,16 +3,20 @@ package message
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/middleware"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
-	msgpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/message"
-	roomspb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/rooms"
+	msgpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/message"
+	roomspb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/rooms"
 	"github.com/go-chi/chi/v5"
 )
+
+const URLParam = "roomID"
 
 func Get(s *gateway.Services) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +27,7 @@ func Get(s *gateway.Services) http.HandlerFunc {
 			return
 		}
 		var err error
-		req.RoomID, err = strconv.ParseInt(chi.URLParam(r, "roomID"), 10, 64)
+		req.RoomID, err = strconv.ParseInt(chi.URLParam(r, URLParam), 10, 64)
 		if err != nil {
 			http.Error(w, "invalid room id", http.StatusBadRequest)
 			return
@@ -45,6 +49,43 @@ func Get(s *gateway.Services) http.HandlerFunc {
 			responses.GatewayGRPCErr(w, s.Log, "messages", err)
 			return
 		}
-		responses.SendJSON(w, http.StatusOK, msgs)
+		w.WriteHeader(http.StatusOK)
+		writeMessages(w, msgs.Messages)
 	}
+}
+
+func writeMessages(w io.Writer, messages []*msgpb.Message) error {
+	_, err := w.Write([]byte{'['})
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(messages)-1; i++ {
+		_, err := fmt.Fprintf(w, `{"ID":%d,"RoomID":%d,"UID":%d,"Type":%q,"Text":%q,"Timestamp":%q},`,
+			messages[i].ID,
+			messages[i].RoomID,
+			messages[i].UID,
+			messages[i].Type,
+			messages[i].Text,
+			messages[i].Timestamp.AsTime(),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	lastIdx := len(messages) - 1
+	if lastIdx >= 0 {
+		_, err = fmt.Fprintf(w, `{"ID":%d,"RoomID":%d,"UID":%d,"Type":%q,"Text":%q,"Timestamp":%q}`,
+			messages[len(messages)-1].ID,
+			messages[len(messages)-1].RoomID,
+			messages[len(messages)-1].UID,
+			messages[len(messages)-1].Type,
+			messages[len(messages)-1].Text,
+			messages[len(messages)-1].Timestamp.AsTime(),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = w.Write([]byte{']', '\n'})
+	return err
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/rooms-service/internal/gRPC/status_error"
 	"github.com/P3rCh1/chat-server/rooms-service/internal/models"
-	roomspb "github.com/P3rCh1/chat-server/rooms-service/shared/proto/gen/go/rooms"
+	roomspb "github.com/P3rCh1/chat-server/rooms-service/pkg/proto/gen/go/rooms"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

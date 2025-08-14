@@ -11,3 +11,9 @@ redis:
   addr: "redis:6379"
   db: 0
   ttl: "24h"
+kafka:
+  brokers:
+    - "kafka1:9092"
+    - "kafka2:9093"
+    - "kafka3:9094"
+  topic: "messages"

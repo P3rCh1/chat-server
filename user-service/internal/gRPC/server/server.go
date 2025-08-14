@@ -6,7 +6,7 @@ import (
 	"github.com/P3rCh1/chat-server/user-service/internal/gRPC/status_error"
 	"github.com/P3rCh1/chat-server/user-service/internal/gRPC/validate"
 	"github.com/P3rCh1/chat-server/user-service/internal/models"
-	userpb "github.com/P3rCh1/chat-server/user-service/shared/proto/gen/go/user"
+	userpb "github.com/P3rCh1/chat-server/user-service/pkg/proto/gen/go/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -89,5 +89,6 @@ func (s *ServerAPI) Profile(ctx context.Context, r *userpb.ProfileRequest) (*use
 }
 
 func (s *ServerAPI) Ping(ctx context.Context, r *userpb.Empty) (*userpb.Empty, error) {
+	s.user.Ping(ctx)
 	return &userpb.Empty{}, nil
 }

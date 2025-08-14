@@ -22,6 +22,22 @@ import (
 func Run(cfg *config.Config) {
 	services := gateway.MustNew(cfg)
 	defer services.Close()
+	r := AddHandlers(cfg, services)
+	server := &http.Server{
+		Addr:         cfg.HTTP.Host + ":" + cfg.HTTP.Port,
+		Handler:      r,
+		ReadTimeout:  cfg.HTTP.ReadTimeout,
+		WriteTimeout: cfg.HTTP.WriteTimeout,
+		IdleTimeout:  cfg.HTTP.IdleTimeout,
+	}
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
+	go serve(cfg, services, server)
+	<-done
+	Shutdown(cfg, services, server)
+}
+
+func AddHandlers(cfg *config.Config, services *gateway.Services) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(mw.CORS)
@@ -43,32 +59,27 @@ func Run(cfg *config.Config) {
 			r.Put("/invite", rooms.Invite(services))
 			r.Put("/join", rooms.Join(services))
 			r.Get("/rooms", rooms.UserIn(services))
-			r.Get("/messages/{roomID}", message.Get(services))
+			r.Get(fmt.Sprintf("/messages/{%s}", message.URLParam), message.Get(services))
 		})
 	})
 	r.HandleFunc("/ws", websocket.Connector(cfg, services))
-	server := &http.Server{
-		Addr:         cfg.HTTP.Host + ":" + cfg.HTTP.Port,
-		Handler:      r,
-		ReadTimeout:  cfg.HTTP.ReadTimeout,
-		WriteTimeout: cfg.HTTP.WriteTimeout,
-		IdleTimeout:  cfg.HTTP.IdleTimeout,
-	}
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		services.Log.Info("starting server",
-			"host", cfg.HTTP.Host,
-			"port", cfg.HTTP.Port,
+	return r
+}
+
+func serve(cfg *config.Config, services *gateway.Services, server *http.Server) {
+	services.Log.Info("starting server",
+		"host", cfg.HTTP.Host,
+		"port", cfg.HTTP.Port,
+	)
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		services.Log.Error(
+			"server error",
+			"error", err,
 		)
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			services.Log.Error(
-				"server error",
-				"error", err,
-			)
-		}
-	}()
-	<-done
+	}
+}
+
+func Shutdown(cfg *config.Config, services *gateway.Services, server *http.Server) {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer cancel()
 	services.Log.Info("shutting down server...")

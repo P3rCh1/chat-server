@@ -5,10 +5,10 @@ import (
 )
 
 type Message struct {
-	ID        int64     `json:"id"`
-	RoomID    int64     `json:"roomID"`
-	UID       int64     `json:"uid"`
-	Type      string    `json:"type"`
-	Text      string    `json:"text"`
-	Timestamp time.Time `json:"timestamp"`
+	ID        int64     `json:"ID"`
+	RoomID    int64     `json:"RoomID"`
+	UID       int64     `json:"UID"`
+	Type      string    `json:"Type"`
+	Text      string    `json:"Text"`
+	Timestamp time.Time `json:"Timestamp"`
 }

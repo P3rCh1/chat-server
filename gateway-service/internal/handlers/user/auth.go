@@ -7,7 +7,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
-	userpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/user"
+	userpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/user"
 )
 
 func Register(s *gateway.Services) http.HandlerFunc {

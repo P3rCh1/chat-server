@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/P3rCh1/chat-server/message-service/shared/config"
+	"github.com/P3rCh1/chat-server/message-service/pkg/config"
 )
 
 type Config struct {

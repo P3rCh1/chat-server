@@ -3,33 +3,33 @@ package models
 import "time"
 
 type WSResponse struct {
-	Type string `json:"type"`
+	Type string `json:"Type"`
 }
 
 type WSRequest struct {
-	Type      string `json:"type"`
-	Text      string `json:"text"`
-	NewRoomID int64  `json:"roomID"`
+	Type      string `json:"Type"`
+	Text      string `json:"Text"`
+	NewRoomID int64  `json:"RoomID"`
 }
 
 type Message struct {
 	WSResponse
-	ID        int64     `json:"id"`
-	RoomID    int64     `json:"roomID"`
-	UID       int64     `json:"uid"`
-	Text      string    `json:"text"`
-	Timestamp time.Time `json:"timestamp"`
+	ID        int64     `json:"ID"`
+	RoomID    int64     `json:"RoomID"`
+	UID       int64     `json:"UID"`
+	Text      string    `json:"Text"`
+	Timestamp time.Time `json:"Timestamp"`
 }
 
 type WSError struct {
 	WSResponse
-	Error string `json:"error"`
+	Error string `json:"Error"`
 }
 
 type SentResponse struct {
 	WSResponse
-	MessageID int64     `json:"messageID"`
-	Timestamp time.Time `json:"timestamp"`
+	MessageID int64     `json:"MessageID"`
+	Timestamp time.Time `json:"Timestamp"`
 }
 
 func NewWSError(msg string) *WSError {

@@ -131,11 +131,7 @@ func (s *RoomsService) UserIn(
 		s.log.Error(op, "error", err)
 		return nil, fmt.Errorf("get creator error: %w", err)
 	}
-	resp := make([]int64, len(rooms))
-	for i, v := range rooms {
-		resp[i] = v
-	}
-	return resp, nil
+	return rooms, nil
 }
 
 func (s *RoomsService) IsMember(
@@ -154,6 +150,4 @@ func (s *RoomsService) IsMember(
 	return isMember, nil
 }
 
-func (s *RoomsService) Ping(ctx context.Context) {
-	return
-}
+func (s *RoomsService) Ping(ctx context.Context) {}

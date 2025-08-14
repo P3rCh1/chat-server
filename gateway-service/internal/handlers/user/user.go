@@ -10,7 +10,7 @@ import (
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/middleware"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
-	userpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/user"
+	userpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/user"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -65,12 +65,12 @@ func profile(uid int64, s *gateway.Services, w http.ResponseWriter, r *http.Requ
 		return
 	}
 	profile := struct {
-		uid       int64     `json:"uid"`
-		Username  string    `json:"username"`
-		Email     string    `json:"email"`
-		CreatedAt time.Time `json:"createdAt"`
+		UID       int64     `json:"UID"`
+		Username  string    `json:"Username"`
+		Email     string    `json:"Email"`
+		CreatedAt time.Time `json:"CreatedAt"`
 	}{
-		uid:       profileProto.UID,
+		UID:       profileProto.UID,
 		Username:  profileProto.Username,
 		Email:     profileProto.Email,
 		CreatedAt: profileProto.CreatedAt.AsTime(),

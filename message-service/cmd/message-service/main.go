@@ -8,7 +8,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/message-service/internal/config"
 	"github.com/P3rCh1/chat-server/message-service/internal/gRPC/server"
-	"github.com/P3rCh1/chat-server/message-service/shared/logger"
+	"github.com/P3rCh1/chat-server/message-service/pkg/logger"
 )
 
 func main() {

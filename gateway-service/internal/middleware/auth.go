@@ -6,7 +6,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
-	sessionpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/session"
+	sessionpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/session"
 )
 
 const UIDContextKey = "UID"

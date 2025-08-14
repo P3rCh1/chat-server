@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/models"
-	msgpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/message"
-	roomspb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/rooms"
+	msgpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/message"
+	roomspb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/rooms"
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -57,14 +57,12 @@ func (h *connectionHandler) route(r *models.WSRequest) {
 	case "enter":
 		h.enter(r.NewRoomID)
 	default:
-		h.writeMutex.Lock()
-		h.conn.WriteJSON(models.NewWSError("invalid operation"))
-		h.writeMutex.Unlock()
+		h.SyncWriteJSON(models.NewWSError("invalid operation"))
 	}
 }
 
 func (h *connectionHandler) internalErr(op string, err error) {
-	h.conn.WriteJSON(models.NewWSError("internal error"))
+	h.SyncWriteJSON(models.NewWSError("internal error"))
 	h.ws.services.Log.Error(
 		op,
 		"error", err,
@@ -74,7 +72,7 @@ func (h *connectionHandler) internalErr(op string, err error) {
 func (h *connectionHandler) sendMessage(msg *msgpb.SendRequest) {
 	const op = "websocket.reader.sendMessage"
 	if h.roomID == 0 {
-		h.conn.WriteJSON(models.NewWSError("not in room"))
+		h.SyncWriteJSON(models.NewWSError("not in room"))
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), h.ws.services.Timeouts.Rooms)
@@ -82,12 +80,12 @@ func (h *connectionHandler) sendMessage(msg *msgpb.SendRequest) {
 	resp, err := h.ws.services.Message.Send(ctx, msg)
 	if err != nil {
 		if status, ok := status.FromError(err); ok && status.Code() != codes.Internal {
-			h.conn.WriteJSON(models.NewWSError(status.Message()))
+			h.SyncWriteJSON(models.NewWSError(status.Message()))
 		}
 		h.internalErr(op, err)
 		return
 	}
-	h.conn.WriteJSON(models.NewSentResponse(resp.ID, resp.Timestamp.AsTime()))
+	h.SyncWriteJSON(models.NewSentResponse(resp.ID, resp.Timestamp.AsTime()))
 }
 
 func (h *connectionHandler) enter(newRoomID int64) {
@@ -99,14 +97,14 @@ func (h *connectionHandler) enter(newRoomID int64) {
 				"error", err,
 			)
 		}
-		h.conn.WriteJSON(err)
+		h.SyncWriteJSON(err)
 		return
 	}
 	mu.Lock()
 	h.delRoomMember()
 	h.setRoomMember(newRoomID)
 	mu.Unlock()
-	h.conn.WriteJSON(models.NewEnterResponse())
+	h.SyncWriteJSON(models.NewEnterResponse())
 }
 
 func (h *connectionHandler) validateEnter(newRoomID int64) *models.WSError {

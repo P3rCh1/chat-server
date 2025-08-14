@@ -1,17 +1,19 @@
-## chat-server
+# chat-server
 ## В репозитории представлен мой pet-проект для backend-разработки на Go
-**Используемые технологии:** 
+### Используемые технологии:
 
 ```
 - net/http
 - chi, chi/middleware
-- gorilla/websocket
-- postgres
-- redis
-- docker
+- gorilla/websocket,
+- gRPC,
+- Kafka
+- PostgreSQL
+- Redis
+- Docker
 ```
 
-**Запуск**
+### Запуск
 ```bash
 git clone https://github.com/P3rCh1/chat-server.git
 cd chat-server
@@ -24,18 +26,22 @@ POSTGRES_USER=chat                      # Пользователь БД
 POSTGRES_PASSWORD=your_strong_pass_1    # Пароль
 POSTGRES_DB=chatdb                      # Название БД
 
-# Redis (если требуется аутентификация)
+# Redis
 REDIS_PASSWORD=your_strong_pass_2
 
-# Путь к конфигурации
-CONFIG_PATH=./configs/config_example.yaml
+# Пути к конфигураиям (по умолчанию находятся в корневых дирректориях микросервисов)
+GATEWAY_CONFIG_PATH=./config.yaml
+SESSION_CONFIG_PATH=./config.yaml
+USER_CONFIG_PATH=./config.yaml
+ROOMS_CONFIG_PATH=./config.yaml
+MESSAGE_CONFIG_PATH=./config.yaml
 
 # JWT
 JWT_SECRET=your_jwt_secret               # Секретный ключ для токенов
 ```
-- Так же перед запуском можно настроить configs/config.yaml  
+- Так же перед запуском можно настроить config.yaml для каждого сервиса
   
-**API Endpoints**
+### API Endpoints
 
 - Аутентификация
 
@@ -47,9 +53,9 @@ JWT_SECRET=your_jwt_secret               # Секретный ключ для т
 curl -X POST http://localhost:8080/register \
 -H "Content-Type: application/json" \
 -d  '{
-        "username": "user",
-        "email": "user@example.com",
-        "password": "password"
+        "Username": "user",
+        "Email": "user@example.com",
+        "Password": "password"
     }'
 ```
 
@@ -60,8 +66,8 @@ curl -X POST http://localhost:8080/register \
 curl -X PUT http://localhost:8080/login \
 -H "Content-Type: application/json" \
 -d  '{
-        "email": "user@example.com",
-        "password": "password"
+        "Email": "user@example.com",
+        "Password": "password"
     }'
 ```
 
@@ -76,7 +82,7 @@ curl -X GET http://localhost:8080/profile \
 ```
 
 2) GET	/profile/{UID}  
-Посмотреть профиль по id 
+Посмотреть профиль по UID 
 Пример:
 ```
 curl -X GET http://localhost:8080/profile/1
@@ -90,7 +96,7 @@ curl -X PUT http://localhost:8080/change-name \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
 -H "Content-Type: application/json" \
 -d  '{
-        "username": "newname1234"
+        "NewName": "newname1234"
     }'
 ```
 
@@ -104,8 +110,8 @@ curl -X POST http://localhost:8080/create-room \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
 -H "Content-Type: application/json" \
 -d  '{
-    "name": "GeneralChat",
-    "is_private": false
+        "Name": "GeneralChat",
+        "IsPrivate": false
     }'
 ```
 
@@ -118,7 +124,7 @@ curl -X PUT http://localhost:8080/join \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
 -H "Content-Type: application/json" \
 -d  '{
-    "room_id": 1
+        "RoomID": 1
     }'
 ```
 
@@ -131,8 +137,8 @@ curl -X PUT http://localhost:8080/invite \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
 -H "Content-Type: application/json" \
 -d  '{
-    "room_id": 1,
-    "user_id": 1
+        "RoomID": 1,
+        "UID": 1
     }'
 ```
 
@@ -140,7 +146,7 @@ curl -X PUT http://localhost:8080/invite \
 Получить слайс ID комнат пользователя  
 Пример:
 ```
-curl -X PUT http://localhost:8080/rooms \
+curl -X GET http://localhost:8080/rooms \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
@@ -153,14 +159,14 @@ curl -X GET http://localhost:8080/room/1
 
 - Messages  
 1) GET /messages/{roomID}  
-Получить слайс сообщений отправленных в комнате, отсортированных по времени добавления в обратном порядке  
-Eсли last_id = 0, отправляются сообщения начаиная с последнего  
-В конфиге get_message_limit настраивает лимит получения сообщений за запрос  
+Получить слайс сообщений, отправленных в комнате, отсортированных по времени добавления в обратном порядке  
+Eсли LastID = 0, отправляются сообщения начаиная с последнего 
+Лимит отправки - 100 сообщений
 Пример:
 ```
 curl -X GET http://localhost:8080/messages/1 \
 -H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
--d '{"last_id":100}'
+-d '{"LastID":100}'
 ```
 
 - Websocket  
@@ -169,18 +175,23 @@ curl -X GET http://localhost:8080/messages/1 \
 Пример:
 ```
 wscat -c "ws://localhost:8080/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```  
+- Войти в комнату
+Если RoomID = 0 - выходишь из комнаты
 ```
-
-- Сообщения отправляются следующим образом:
+{"Type":"enter", "RoomID":1}
+```  
+- Написать сообщение
 ```
-{"type":"your_type", "content":"your_content"}
+{"Type":"message","Text":"my message"}
 ```
-- Типы сообщений:
-1) "join" присоединиться к комнате  
-Можно присоединиться только если до этого получил доступ  
-Если пользователь уже состоит в комнате - покинет ее и успешно присоединится к новой
-2) "leave" покинуть комнату  
-3) "message" написать сообщение в комнату
- 
-- При присоединени, покидании комнаты, всем ее участникам рассылается сообщение от лица system_username (настраивается в конфиге)  
-- На все ошибочные запросы отправляет ответ error_username (настраивается в конфиге)
+  
+### Архитектура проекта
+- За получение запросов и удержание вебсокет соединения отвечает "gateway-service", 
+с другими сервисами он общается с помощью gRPC  
+- "session-service" отвечает за валидацию и создание jwt токенов  
+- "user-service" отвечает за запросы на создание изменение и получение профилей пользователей  
+- "rooms-service" аналогично отвечает за запросы, связанных с комнатами. Кроме того отправляет сообщение об успешном добавлении пользователя в нужную комнату  
+- "message-service" принимает запросы на отправку сообщения для их сохранения в базу и дальнейшей отправки в комнаты с помощью Kafka  
+<br>
+- Кроме того настроено кэширование в Redis для профилей пользователей, списка их комнат, профилей комнат

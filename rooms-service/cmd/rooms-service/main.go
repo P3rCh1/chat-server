@@ -9,7 +9,7 @@ import (
 	"github.com/P3rCh1/chat-server/rooms-service/internal/config"
 	"github.com/P3rCh1/chat-server/rooms-service/internal/gRPC/server"
 	"github.com/P3rCh1/chat-server/rooms-service/internal/rooms"
-	"github.com/P3rCh1/chat-server/rooms-service/shared/logger"
+	"github.com/P3rCh1/chat-server/rooms-service/pkg/logger"
 )
 
 func main() {

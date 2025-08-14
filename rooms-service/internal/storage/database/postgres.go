@@ -55,13 +55,13 @@ func (p *Postgres) Close() error {
 	return p.db.Close()
 }
 
-func (r *Postgres) CreateRoom(ctx context.Context, room *models.Room) error {
+func (p *Postgres) CreateRoom(ctx context.Context, room *models.Room) error {
 	const query = `
 		INSERT INTO rooms (name, is_private, creator_id)
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at
 	`
-	tx, err := r.db.BeginTx(ctx, &sql.TxOptions{
+	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelReadCommitted,
 		ReadOnly:  false,
 	})
@@ -97,12 +97,12 @@ func (r *Postgres) CreateRoom(ctx context.Context, room *models.Room) error {
 	return nil
 }
 
-func (r *Postgres) CreatorID(ctx context.Context, roomID int64) (int64, error) {
+func (p *Postgres) CreatorID(ctx context.Context, roomID int64) (int64, error) {
 	const query = `
 		SELECT creator_id FROM rooms WHERE id = $1
 	`
 	var creatorID int64
-	err := r.db.QueryRowContext(ctx, query, roomID).Scan(&creatorID)
+	err := p.db.QueryRowContext(ctx, query, roomID).Scan(&creatorID)
 	if err != nil {
 		statErr := ExpectedPGErr(err, status_error.UserNotFound, nil)
 		if statErr != nil {
@@ -113,28 +113,57 @@ func (r *Postgres) CreatorID(ctx context.Context, roomID int64) (int64, error) {
 	return creatorID, nil
 }
 
-func (r *Postgres) AddToRoom(ctx context.Context, uid, roomID int64) error {
-	const query = `
+func (p *Postgres) AddToRoom(ctx context.Context, uid, roomID int64) (*models.Message, error) {
+	const queryRoomInsert = `
 		INSERT INTO room_members (user_id, room_id)
 		VALUES ($1, $2)
 	`
-	_, err := r.db.ExecContext(ctx, query, uid, roomID)
+	const queryMessagesInsert = `
+        INSERT INTO messages (
+            room_id,
+            user_id,
+			type,
+			text
+        ) VALUES ($1, $2, $3, '')
+		RETURNING id, timestamp
+    `
+	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, queryRoomInsert, uid, roomID)
 	if err != nil {
 		statErr := ExpectedPGErr(err, status_error.UserNotFound, status_error.AlreadyInRoom)
 		if statErr != nil {
-			return statErr
+			return nil, statErr
 		}
-		return fmt.Errorf("failed add to room: %w", err)
+		return nil, fmt.Errorf("failed add to room: %w", err)
 	}
-	return nil
+	msg := &models.Message{
+		RoomID: roomID,
+		UID:    uid,
+		Type:   "join",
+	}
+	row := tx.QueryRow(queryMessagesInsert, msg.RoomID, msg.UID, msg.Type)
+	err = row.Scan(&msg.ID, &msg.Timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("store msg fail: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit failed: %w", err)
+	}
+	return msg, nil
 }
 
-func (r *Postgres) IsPrivate(ctx context.Context, roomID int64) (bool, error) {
+func (p *Postgres) IsPrivate(ctx context.Context, roomID int64) (bool, error) {
 	const query = `
 		SELECT is_private FROM rooms WHERE id = $1
 	`
 	var isPrivate bool
-	err := r.db.QueryRowContext(ctx, query, roomID).Scan(&isPrivate)
+	err := p.db.QueryRowContext(ctx, query, roomID).Scan(&isPrivate)
 	if err != nil {
 		statErr := ExpectedPGErr(err, status_error.RoomNotFound, nil)
 		if statErr != nil {
@@ -145,11 +174,11 @@ func (r *Postgres) IsPrivate(ctx context.Context, roomID int64) (bool, error) {
 	return isPrivate, nil
 }
 
-func (r *Postgres) GetUserRooms(ctx context.Context, uid int64) ([]int64, error) {
+func (p *Postgres) GetUserRooms(ctx context.Context, uid int64) ([]int64, error) {
 	const query = `
         SELECT room_id FROM room_members WHERE user_id = $1
     `
-	rows, err := r.db.Query(query, uid)
+	rows, err := p.db.Query(query, uid)
 	if err != nil {
 		statErr := ExpectedPGErr(err, status_error.UserNotFound, nil)
 		if statErr != nil {
@@ -169,14 +198,14 @@ func (r *Postgres) GetUserRooms(ctx context.Context, uid int64) ([]int64, error)
 	return rooms, nil
 }
 
-func (r *Postgres) GetRoom(ctx context.Context, roomID int64) (*models.Room, error) {
+func (p *Postgres) GetRoom(ctx context.Context, roomID int64) (*models.Room, error) {
 	const query = `
         SELECT name, is_private, creator_id, created_at FROM rooms WHERE id = $1
     `
 	room := &models.Room{
 		RoomID: roomID,
 	}
-	err := r.db.QueryRowContext(ctx, query, roomID).Scan(
+	err := p.db.QueryRowContext(ctx, query, roomID).Scan(
 		&room.Name,
 		&room.IsPrivate,
 		&room.CreatorUID,
@@ -192,12 +221,12 @@ func (r *Postgres) GetRoom(ctx context.Context, roomID int64) (*models.Room, err
 	return room, nil
 }
 
-func (r *Postgres) IsMember(ctx context.Context, uid, roomID int64) (bool, error) {
+func (p *Postgres) IsMember(ctx context.Context, uid, roomID int64) (bool, error) {
 	const query = `
         SELECT EXISTS(SELECT 1 FROM room_members WHERE user_id = $1 AND room_id = $2) 
     `
 	var exists bool
-	err := r.db.QueryRowContext(ctx, query, uid, roomID).Scan(&exists)
+	err := p.db.QueryRowContext(ctx, query, uid, roomID).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check IsMember: %w", err)
 	}

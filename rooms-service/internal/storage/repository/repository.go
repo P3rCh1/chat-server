@@ -10,6 +10,7 @@ import (
 	"github.com/P3rCh1/chat-server/rooms-service/internal/models"
 	"github.com/P3rCh1/chat-server/rooms-service/internal/storage/cache"
 	"github.com/P3rCh1/chat-server/rooms-service/internal/storage/database"
+	"github.com/P3rCh1/chat-server/rooms-service/internal/storage/kafka"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -18,6 +19,7 @@ type Repository struct {
 	psql        *database.Postgres
 	rooms       *cache.RedisRooms
 	roomMembers *cache.RedisRoomMembers
+	kafka       *kafka.Producer
 }
 
 func (r *Repository) Close() {
@@ -45,6 +47,7 @@ func New(log *slog.Logger, cfg *config.Config) (*Repository, error) {
 		repo.roomMembers = cache.NewRoomMembersCacher(redis, cfg.Redis.TTL)
 		repo.rooms = cache.NewRoomsCacher(redis, cfg.Redis.TTL)
 	}()
+	repo.kafka = kafka.NewProducer(cfg.Kafka)
 	wg.Wait()
 	if err := errors.Join(errPQ, errRedis); err != nil {
 		repo.Close()
@@ -73,10 +76,14 @@ func (r *Repository) CreatorID(ctx context.Context, roomID int64) (int64, error)
 }
 
 func (r *Repository) AddToRoom(ctx context.Context, uid, roomID int64) error {
-	err := r.psql.AddToRoom(ctx, uid, roomID)
+	msg, err := r.psql.AddToRoom(ctx, uid, roomID)
 	if err != nil {
 		return err
 	}
+	go func() {
+		err := r.kafka.Send(ctx, msg)
+		r.log.Error("kafka send", "error", err)
+	}()
 	if err := r.roomMembers.AddSingle(ctx, uid, roomID); err != nil {
 		if err == cache.NotFound {
 			r.log.Debug("not found user`s rooms in cache", "UID", uid)

@@ -10,7 +10,7 @@ import (
 	"github.com/P3rCh1/chat-server/gateway-service/internal/gateway"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/middleware"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/responses"
-	roomspb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/rooms"
+	roomspb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/rooms"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -84,7 +84,7 @@ func Get(s *gateway.Services) http.HandlerFunc {
 		defer r.Body.Close()
 		roomID, err := strconv.ParseInt(chi.URLParam(r, URLParam), 10, 64)
 		if err != nil {
-			http.Error(w, "invalid roomID", http.StatusBadRequest)
+			http.Error(w, "invalid room id", http.StatusBadRequest)
 			return
 		}
 		req := roomspb.GetRequest{RoomID: int64(roomID)}
@@ -96,11 +96,11 @@ func Get(s *gateway.Services) http.HandlerFunc {
 			return
 		}
 		resp := struct {
-			RoomID     int64     `json:"roomID"`
-			Name       string    `json:"name"`
-			CreatorUID int64     `json:"creatorUID"`
-			IsPrivate  bool      `json:"isPrivate"`
-			CreatedAt  time.Time `json:"createdAt"`
+			RoomID     int64     `json:"RoomID"`
+			Name       string    `json:"Name"`
+			CreatorUID int64     `json:"CreatorUID"`
+			IsPrivate  bool      `json:"IsPrivate"`
+			CreatedAt  time.Time `json:"CreatedAt"`
 		}{
 			RoomID:     respGRPC.RoomID,
 			Name:       respGRPC.Name,

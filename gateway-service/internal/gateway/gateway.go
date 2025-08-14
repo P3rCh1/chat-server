@@ -9,11 +9,11 @@ import (
 
 	"github.com/P3rCh1/chat-server/gateway-service/internal/config"
 	"github.com/P3rCh1/chat-server/gateway-service/internal/kafka"
-	"github.com/P3rCh1/chat-server/gateway-service/shared/logger"
-	msgpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/message"
-	roomspb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/rooms"
-	sessionpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/session"
-	userpb "github.com/P3rCh1/chat-server/gateway-service/shared/proto/gen/go/user"
+	"github.com/P3rCh1/chat-server/gateway-service/pkg/logger"
+	msgpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/message"
+	roomspb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/rooms"
+	sessionpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/session"
+	userpb "github.com/P3rCh1/chat-server/gateway-service/pkg/proto/gen/go/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

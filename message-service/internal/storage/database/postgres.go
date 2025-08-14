@@ -8,7 +8,7 @@ import (
 
 	"github.com/P3rCh1/chat-server/message-service/internal/config"
 	"github.com/P3rCh1/chat-server/message-service/internal/models"
-	msgpb "github.com/P3rCh1/chat-server/message-service/shared/proto/gen/go/message"
+	msgpb "github.com/P3rCh1/chat-server/message-service/pkg/proto/gen/go/message"
 	_ "github.com/lib/pq"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -114,10 +114,11 @@ func (p *Postgres) GetMsgs(roomID, lastID int64) ([]*msgpb.Message, error) {
 	for rows.Next() {
 		msg := msgpb.Message{}
 		var timestamp time.Time
-		if err := rows.Scan(&msg.ID, &msg.UID, &msg.Type, &msg.Text, timestamp); err != nil {
+		if err := rows.Scan(&msg.ID, &msg.UID, &msg.Type, &msg.Text, &timestamp); err != nil {
 			return nil, fmt.Errorf("failed to scan msg: %w", err)
 		}
 		msg.Timestamp = timestamppb.New(timestamp)
+		msg.RoomID = roomID
 		msgs = append(msgs, &msg)
 	}
 	return msgs, nil
